@@ -1,7 +1,6 @@
-import flask
 import time
 from flask import request, make_response, jsonify, render_template, redirect, url_for
-from __init__ import app, socketio, db, login
+from __init__ import app, socketio, login
 from wtform_fields import *
 from models import *
 from passlib.hash import pbkdf2_sha256
@@ -10,6 +9,26 @@ from flask_socketio import send, emit, join_room, leave_room
 from db_functions import *
 
 ROOMS = ['loung', 'news', 'games', 'coding']
+
+"""
+    SOCKETS on frontend:
+        - message (from back we return message about action 
+            (For example, 'user_name' deleted, 'user_name' was added, new message was send, room name was changed etc.))
+        - message-delete
+    SOCKETS on backend: 
+        - incoming-msg (send message)
+        - reply-msg (reply message)
+        - delete-msg (delete message)
+        - join (join to room)
+        - leave (leave room)
+        - room-create
+        - room-edit
+        - room-delete 
+    ENDPOINTS: 
+        - /rooms/list (implement logic that allows to list chats (ids, names, img_urls etc) ) 
+        - /rooms/<room_id>/messages (get rooms messages)
+        - ? (do not sure) /rooms/<room_id>/members (list of users in room)
+"""
 
 
 @login.user_loader
@@ -111,26 +130,22 @@ def list_rooms():
     pass
 
 
-@app.route('/rooms/create', methods=['GET', 'POST'])
 # @login_required
-def create_room():
+@socketio.on('room-create')
+def create_room(data):
     # TODO: notify all members (except admin) that they were added
 
-    if request.method == 'POST':
-        room_name = request.form.get('room_name')
-        usernames = [username.strip() for username in
-                     request.form.get('members').split(',')]
+    room_name = data['room_name']
+    creator_id = current_user.id
+    members = {user['user_id'] for user in data['members'] if user['user_id'] != creator_id}
 
-        if room_name is not None and usernames:
-            room_id, exists = save_room(room_name, current_user.id)
-            if current_user.username in usernames:
-                usernames.remove(current_user.username)
-            add_room_members(room_id, current_user.id, usernames)
+    room_id, exists = save_room(room_name, creator_id)
+    add_room_members(room_id, creator_id, members)
 
-        return 'success'
+    return 'success'
 
 
-@app.route('/rooms/<room_id>/edit', methods=['GET', 'PUT'])
+@socketio.on('room-edit')
 # @login_required
 def edit_room(room_id):
     # TODO: show modification to all room members
@@ -143,8 +158,7 @@ def view_room(room_id):
     pass
 
 
-@app.route('/rooms/<room_id>/delete', methods=['DELETE'])
-# @login_required
+@socketio.on('room-delete')
 def delete_room(room_id):
     # TODO: update the db + notify all rooms members
     pass
@@ -160,10 +174,6 @@ def room_messages(room_id):
 def room_members(room_id):
     # TODO: logic that lists room members (username, photo_url)
     pass
-
-
-
-
 
 
 if __name__ == '__main__':

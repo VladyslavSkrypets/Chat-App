@@ -1,6 +1,4 @@
 import datetime
-
-from __init__ import db
 from models import *
 from typing import Iterable, List
 
@@ -15,8 +13,8 @@ def save_room(room_name: str, creator_id: int) -> int:
 
 def add_room_members(room_id: int, creator_id: int, members: Iterable[str]) -> None:
     room = Room.query.filter_by(id=room_id, creator_id=creator_id).first()
-    for username in members:
-        user = User.query.filter_by(username=username).first()
+    for user_id in members:
+        user = User.query.filter_by(user_id=user_id).first()
         if user is not None:
             room.users.append(user)
 
