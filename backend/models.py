@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String, nullable=False, unique=True)
     username = db.Column(db.String(25), unique=True, nullable=False)
     password = db.Column(db.String(), nullable=False)
 
@@ -37,10 +38,19 @@ class Room(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
+    name = db.Column(db.String, nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     def __init__(self, name: str, creator_id: int):
         self.name = name
         self.creator_id = creator_id
 
+
+class Messages(db.Model):
+    __tablename__ = 'messages'
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_member_id = db.Column(db.String, db.ForeignKey('users.user_id'), nullable=False)
+    message_text = db.Column(db.TEXT, nullable=False)
+    send_at = db.Column(db.DateTime, nullable=False)
+    is_reply_to = db.Column(db.Integer, db.ForeignKey('messages.id'), nullable=False)
