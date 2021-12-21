@@ -3,6 +3,7 @@ from flask import request, make_response, jsonify, render_template, redirect, ur
 from __init__ import app, socketio, login
 from wtform_fields import *
 from models import *
+from schemas import UserSchema
 from passlib.hash import pbkdf2_sha256
 from flask_login import login_user, current_user, login_required, logout_user
 from flask_socketio import send, emit, join_room, leave_room
@@ -134,15 +135,28 @@ def list_rooms():
 @socketio.on('room-create')
 def create_room(data):
     # TODO: notify all members (except admin) that they were added
+    try:
+        room_name = data['room_name']
+        creator_id = current_user.id
+        members = {user['user_id'] for user in data['members'] if user['user_id'] != creator_id}
 
-    room_name = data['room_name']
-    creator_id = current_user.id
-    members = {user['user_id'] for user in data['members'] if user['user_id'] != creator_id}
+        room_id, exists = save_room(room_name, creator_id)
+        add_room_members(room_id, creator_id, members)
 
-    room_id, exists = save_room(room_name, creator_id)
-    add_room_members(room_id, creator_id, members)
+        emit('room-created', {'message': 'Room created', 'status': 201})
+    except Exception as e:
+        print(e)
+        emit('room-created', {'message': e, 'status': 400})
 
-    return 'success'
+
+@app.route('/get-user')
+def get_user():
+    user_email = request.args.get('user_email', '')
+    user = User.query.filter_by(User.email.like(f'%{user_email}%')).first()
+    if bool(user):
+        return jsonify({'user': UserSchema().dump(user)}), 200
+
+    return jsonify({'user': {}}), 404
 
 
 @socketio.on('room-edit')
