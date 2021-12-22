@@ -1,12 +1,18 @@
+import uuid
 from __init__ import db
 from flask_login import UserMixin
 from sqlalchemy import UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID
+
+UUID_FIELD = UUID(as_uuid=True)
 
 
 room_member = db.Table(
     'room_members',
-    db.Column('room_id', db.Integer, db.ForeignKey('room.id'), nullable=False),
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), nullable=False),
+    db.Column('room_id', db.Integer, db.ForeignKey('room.room_id'),
+              nullable=False),
+    db.Column('user_id', UUID_FIELD, db.ForeignKey('users.user_id'),
+              nullable=False),
     UniqueConstraint('room_id', 'user_id', name='room_id_member_id_uq')
 )
 
@@ -14,9 +20,9 @@ room_member = db.Table(
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String, nullable=False, unique=True)
-    email = db.Column(db.String, nullable=False, unique=True)
+    user_id = db.Column(UUID_FIELD, primary_key=True,
+                        default=uuid.uuid4)
+    email = db.Column(db.String, unique=True)
     username = db.Column(db.String(25), unique=True, nullable=False)
     password = db.Column(db.String(), nullable=False)
 
@@ -31,6 +37,9 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
+    def get_id(self):
+        return self.user_id
+
 
 class Room(db.Model):
     __table_args__ = (
@@ -38,9 +47,10 @@ class Room(db.Model):
                             name='room_name_creator_id_uq'),
     )
 
-    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
-    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    creator_id = db.Column(UUID_FIELD, db.ForeignKey('users.user_id'),
+                           nullable=False)
 
     def __init__(self, name: str, creator_id: int):
         self.name = name
@@ -50,8 +60,13 @@ class Room(db.Model):
 class Messages(db.Model):
     __tablename__ = 'messages'
 
-    id = db.Column(db.Integer, primary_key=True)
-    room_member_id = db.Column(db.String, db.ForeignKey('users.user_id'), nullable=False)
+    message_id = db.Column(UUID_FIELD, primary_key=True,
+                           default=uuid.uuid4)
+    room_member_id = db.Column(UUID_FIELD, db.ForeignKey('users.user_id'),
+                               nullable=False)
     message_text = db.Column(db.TEXT, nullable=False)
     send_at = db.Column(db.DateTime, nullable=False)
-    is_reply_to = db.Column(db.Integer, db.ForeignKey('messages.id'), nullable=False)
+    is_reply_to = db.Column(
+        UUID_FIELD, db.ForeignKey('messages.message_id'),
+        nullable=True
+    )

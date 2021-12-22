@@ -33,8 +33,8 @@ ROOMS = ['loung', 'news', 'games', 'coding']
 
 
 @login.user_loader
-def load_user(id):
-    return User.query.get(int(id))
+def load_user(id_: uuid.UUID = uuid.uuid4()):
+    return User.query.get(id_)
 
 
 @app.route('/', methods=['GET', 'POST'])
