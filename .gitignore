@@ -3,3 +3,4 @@ venv
 .idea
 flask-session/
 backend/.env
+/backend/logs/

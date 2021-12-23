@@ -22,7 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
     });
-
+    socket.on('room-created', data => {
+        console.log(data);
+    })
     // Send messages
     document.querySelector('#send_message').onclick = () => {
         socket.emit('incoming-msg', {'msg': document.querySelector('#user_message').value,
@@ -47,8 +49,16 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    function leaveRoom(room) {
-        socket.emit('leave', {'username': username, 'room': room});
+    document.querySelector('#send_socket').addEventListener('click', () => {
+        let point = document.querySelector('#socketPoint').value;
+        let data = document.querySelector('#dataArea').value;
+        sendCreateData(point, data);
+    })
+
+
+    async function leaveRoom(room) {
+        let resp = await socket.emit('leave', {'username': username, 'room': room});
+        console.log(resp)
     }
 
     function joinRoom(room) {
@@ -61,4 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
         p.innerHTML = msg;
         document.querySelector('#display-message-section').append(p);
     }
+
+    const sendCreateData = (socketPoint, data) => {
+        console.log(data);
+        socket.emit(socketPoint, JSON.parse(data));
+    }
+
 })
