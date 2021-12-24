@@ -31,7 +31,7 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(), nullable=False)
 
     rooms = db.relationship('Room', secondary=room_member,
-                            backref=db.backref('users', lazy='dynamic'),
+                            backref='users',
                             cascade="all,delete")
 
     def __init__(self, username: str, password: str):

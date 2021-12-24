@@ -13,3 +13,9 @@ class MessageSchema(Schema):
     message_text = fields.Str()
     send_at = fields.DateTime()
     is_reply_to = fields.Str()
+
+
+class RoomSchema(Schema):
+    room_id = fields.Integer()
+    name = fields.Str()
+    creator_id = fields.Str()

@@ -2,12 +2,11 @@ import time
 import datetime
 import logging
 import os
-
 from flask import request, make_response, abort, jsonify, Response, render_template, redirect, url_for
 from __init__ import app, socketio, login
 from wtform_fields import *
 from models import *
-from schemas import UserSchema, MessageSchema
+from schemas import *
 from passlib.hash import pbkdf2_sha256
 from flask_login import login_user, current_user, login_required, logout_user
 from flask_socketio import send, emit, join_room, leave_room
@@ -15,7 +14,6 @@ from db_functions import *
 from functools import wraps
 
 
-ROOMS = ['loung', 'news', 'games', 'coding']
 
 LOGS_DIR = os.path.join(os.path.dirname(__file__), 'logs')
 
@@ -65,7 +63,7 @@ def room_admin_checker(function):
 def room_member_checker(function):
     @wraps(function)
     def wrapper(room_id):
-        room_user_ids = {u.user_id for u in Room.query.get(room_id).users.all()}
+        room_user_ids = {u.user_id for u in Room.query.get(room_id).users}
         if current_user.user_id in room_user_ids:
             return function(room_id)
         abort(403, description="You have to be a room member "
@@ -116,7 +114,7 @@ def chat():
 
     return render_template(
         "chat.html", username=current_user.username,
-        rooms=get_current_user_rooms(current_user.user_id)
+        rooms=[r.name for r in current_user.rooms]
     )
 
 
@@ -130,32 +128,29 @@ def logout():
 def on_message(data):
     """Broadcast messages"""
     # {"msg": "test_reply", "username": "user1", "user_id": "4156d5b2-8e97-4b61-8e35-6f3814dacc80", "room": "coding", "reply_to_id": "19c81bd7-f8cc-49f2-b8fd-d73d2fc1c3c5"}
-    # TODO: save message in database
-    # TODO: (see save_message() function in db_functions.py
-
     msg = data['msg']
     username = data['username']
+    room = data['room']
     ######
     # TODO: receive from the client side
     # user_id = data['user_id']
     user_id = User.query.filter_by(username=username).first().user_id
     ######
 
-    room = data['room'].lower()
 
     reply_to_id = data.get('reply_to_id')
     # Set timestamp
     sent_ts = datetime.datetime.utcnow()
     time_stamp = datetime.datetime.strftime(sent_ts, '%b-%d %I:%M%p')
-    msg_id = save_message(user_id, room, sent_ts, msg, reply_to_id)
+    msg_id = save_message(user_id, room.lower(), sent_ts, msg, reply_to_id)
 
-    # try:
-    send({'username': username, 'msg': {'text': msg, 'id': msg_id},
+    send({'username': username, 'msg': {'text': msg,
+                                        'id': str(msg_id)
+                                        },
           'time': time_stamp}, room=room)
 
-    # except Exception as e:
-    #     logger.error(f'Failed to send a message {msg_id}\n{e}')
-    #     delete_message(msg_id)
+
+
 
 
 @socketio.on('join')
@@ -164,10 +159,11 @@ def on_join(data):
 
     username = data["username"]
     room = data["room"]
-    join_room(room)
 
+
+    join_room(room)
     # Broadcast that new user has joined
-    send({"msg": username + " has joined the " + room + " room."}, room=room)
+    send({"msg": {'text':  username + " has joined the " + room + " room."}}, room=room)
 
 
 @socketio.on('leave')
@@ -177,7 +173,10 @@ def on_leave(data):
     username = data['username']
     room = data['room']
     leave_room(room)
-    send({"msg": username + " has left the room"}, room=room)
+    send({"msg": {'text':  username + " has left the " + room + " room."}}, room=room)
+
+
+
 
 
 @app.route('/rooms/list')
@@ -187,10 +186,10 @@ def list_rooms():
     pass
 
 
-a = {
-    'room_name': 'test_room',
-    'members': [{'user_id': "9082e49a-9850-457d-a47d-101d39191d8e"}, {'user_id': "c0b90118-ae8e-4960-883d-e83de9619a25"}]
-}
+# a = {
+#     'room_name': 'test_room',
+#     'members': [{'user_id': "9082e49a-9850-457d-a47d-101d39191d8e"}, {'user_id': "c0b90118-ae8e-4960-883d-e83de9619a25"}]
+# }
 # @login_required
 
 @socketio.on('room-create')
@@ -198,7 +197,7 @@ def create_room(data):
 
     # TODO: notify all members (except admin) that they were added
     try:
-        print(data)
+
         room_name = data['room_name']
         creator_id = current_user.user_id
         members = {user['user_id'] for user in data['members']} | \
@@ -209,7 +208,7 @@ def create_room(data):
 
         emit('room-created', {'message': 'Room created', 'status': 201})
     except Exception as e:
-        print(e)
+
         emit('room-created', {'message': e, 'status': 400})
 
 
@@ -290,12 +289,26 @@ def room_messages(room_id):
 @app.route('/rooms/<room_id>/members')
 @room_member_checker
 def room_members(room_id):
-    user_ids = (
-        rm.user_id for rm in
-        get_room_members_by_room_id(room_id)
+    return jsonify(
+        UserSchema().dump(
+            Room.query.get(room_id).users, many=True
+        )
     )
-    all_members = User.query.filter(User.user_id.in_(user_ids))
-    return jsonify(UserSchema().dump(all_members, many=True))
+
+
+@app.route('/chats')
+def get_chats():
+
+    return jsonify(
+        RoomSchema().dump(
+            current_user.rooms, many=True
+        )
+    )
+
+
+@app.route('/curr_user')
+def curr_user():
+    return current_user.username
 
 
 if __name__ == '__main__':

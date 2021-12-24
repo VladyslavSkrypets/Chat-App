@@ -32,6 +32,7 @@ def get_room_members(room_id: int, creator_id: int) -> List[str]:
 
 def save_message(user_id: uuid.uuid4(), room_name: str, sent_at: datetime.datetime,
                  msg_text: str, reply_to_id: uuid.UUID) -> uuid.UUID:
+    print(room_name)
     room_id = Room.query.filter_by(name=room_name).first().room_id
 
     room_member_id = db.session.query(room_member).filter_by(
@@ -67,6 +68,9 @@ def get_room_members_by_room_id(room_id):
     return db.session.query(room_member).filter_by(room_id=room_id).all()
 
 
+
+
 if __name__ == '__main__':
     # print(Room.query.filter_by(room_id=1).first().users.all())
-    print(db.session.query(room_member).filter_by(room_id=1).all())
+    # print(db.session.query(room_member).filter_by(room_id=1).all())
+    print()

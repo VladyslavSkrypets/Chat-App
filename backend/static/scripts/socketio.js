@@ -1,30 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
-    let room = "Lounge"
-    joinRoom("Lounge");
-    // Display incoming messages
-    socket.on('message', data => {
+    // Retrieve username
+    console.log(username);
 
-        console.log('received a new message', data['msg'])
-        const p = document.createElement('p');
-        const span_username = document.createElement('span');
-        const span_ts = document.createElement('span');
-        const br = document.createElement('br');
 
-        if (document.username) {
-            span_username.innerHTML = data.username;
-            span_ts.innerHTML = data.time;
-            p.innerHTML = span_username.outerHTML + br.outerHTML + data.msg + br.outerHTML + span_ts.outerHTML;
-            document.querySelector('#display-message-section').append(p);
-        } else {
-            printSysMsg(data.msg);
-        }
+    const default_room = "";
+    let room = default_room;
 
-    });
-    socket.on('room-created', data => {
-        console.log(data);
-    })
     // Send messages
     document.querySelector('#send_message').onclick = () => {
         socket.emit('incoming-msg', {'msg': document.querySelector('#user_message').value,
@@ -32,6 +15,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelector('#user_message').value = '';
     };
+
+    // Display incoming messages
+    socket.on('message', data => {
+        console.log(data);
+
+        const text = data['msg']['text'];
+        console.log('received a new message', text);
+        const p = document.createElement('p');
+        const span_username = document.createElement('span');
+        const span_ts = document.createElement('span');
+        const br = document.createElement('br');
+
+        if (typeof data.username !== 'undefined') {
+            span_username.innerHTML = data.username;
+            span_ts.innerHTML = data.time;
+            p.innerHTML = span_username.outerHTML + br.outerHTML + text + br.outerHTML + span_ts.outerHTML;
+            document.querySelector('#display-message-section').append(p);
+            console.log('hit username')
+        } else {
+            console.log('hit simple')
+            printSysMsg(data.msg.text);
+        }
+
+    });
+
+
 
     // Select a room
     document.querySelectorAll('.select-room').forEach(p => {
@@ -42,9 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 let msg = `You are already in ${room} room.`;
                 printSysMsg(msg);
             } else {
-                leaveRoom(room);
+                if (room !== default_room) {
+                    leaveRoom(room);
+                    console.log('leave')
+                }
                 joinRoom(newRoom);
                 room = newRoom;
+                console.log('new room is ', room)
             }
         };
     });
