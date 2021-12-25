@@ -1,6 +1,10 @@
 import datetime
+from itertools import chain
+from sqlalchemy import delete
+
+import db_functions
 from models import *
-from typing import Iterable, List
+from typing import Iterable, List, Set
 
 
 def save_room(room_name: str, creator_id: int) -> int:
@@ -11,14 +15,13 @@ def save_room(room_name: str, creator_id: int) -> int:
     return new_room.room_id
 
 
-def add_room_members(room_id: int, creator_id: int, members: Iterable[str]) -> None:
+def add_room_member(room_id: int, creator_id: int, user_id: UUID) -> None:
     room = Room.query.filter_by(room_id=room_id, creator_id=creator_id).first()
-    for user_id in members:
-        user = User.query.filter_by(user_id=user_id).first()
-        if user is not None:
-            room.users.append(user)
-
     db.session.add(room)
+    user = User.query.filter_by(user_id=user_id).first()
+    if user is not None:
+        room.users.append(user)
+
     db.session.commit()
 
 
@@ -55,8 +58,23 @@ def get_current_user_rooms(user_id):
     return [room.name for room in User.query.get(user_id).rooms]
 
 
+def get_users_sessions(users_ids: Set[str]) -> List[tuple]:
+    return [
+        (user.user_id, user.session_id)
+        for user in db.session.query(User).filter(User.user_id.in_(users_ids))
+    ]
+
+
 def remove_room(room_id):
-    Room.query.get(room_id).delete()
+
+    room_members = db.session.query(room_member.c.id).filter_by(room_id=room_id)
+    room_messages = (
+        db.session.query(Messages)
+        .filter(Messages.room_member_id.in_(chain(*room_members.all())))
+    )
+    room_messages.delete()
+    db.session.query(room_member).filter(room_member.c.room_id == room_id).delete()
+    Room.query.filter_by(room_id=room_id).delete()
     db.session.commit()
 
 

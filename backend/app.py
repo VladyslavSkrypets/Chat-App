@@ -1,5 +1,3 @@
-import time
-import datetime
 import logging
 import os
 from flask import request, make_response, abort, jsonify, Response, render_template, redirect, url_for
@@ -76,6 +74,21 @@ def load_user(id_: uuid.UUID = uuid.uuid4()):
     return User.query.get(id_)
 
 
+@socketio.on('connected')
+def connected():
+    user = db.session.query(User).filter(User.user_id == current_user.user_id).first()
+    user.session_id = request.sid
+    db.session.commit()
+
+
+@socketio.on('disconnect')
+def disconnect():
+    print('user disconnected')
+    user = db.session.query(User).filter(User.user_id == current_user.user_id).first()
+    user.session_id = None
+    db.session.commit()
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     reg_form = RegistrationForm()
@@ -99,8 +112,9 @@ def login():
     login_form = LoginForm()
 
     if login_form.validate_on_submit():
-        user_obj = \
-            User.query.filter_by(username=login_form.username.data).first()
+        user_obj = User.query.filter_by(
+            username=login_form.username.data
+        ).first()
         login_user(user_obj)
         return redirect(url_for('chat'))
 
@@ -126,31 +140,20 @@ def logout():
 
 @socketio.on('incoming-msg')
 def on_message(data):
-    """Broadcast messages"""
-    # {"msg": "test_reply", "username": "user1", "user_id": "4156d5b2-8e97-4b61-8e35-6f3814dacc80", "room": "coding", "reply_to_id": "19c81bd7-f8cc-49f2-b8fd-d73d2fc1c3c5"}
     msg = data['msg']
     username = data['username']
     room = data['room']
-    ######
-    # TODO: receive from the client side
-    # user_id = data['user_id']
     user_id = User.query.filter_by(username=username).first().user_id
-    ######
-
-
     reply_to_id = data.get('reply_to_id')
     # Set timestamp
     sent_ts = datetime.datetime.utcnow()
     time_stamp = datetime.datetime.strftime(sent_ts, '%b-%d %I:%M%p')
-    msg_id = save_message(user_id, room.lower(), sent_ts, msg, reply_to_id)
+    msg_id = save_message(user_id, room, sent_ts, msg, reply_to_id)
 
     send({'username': username, 'msg': {'text': msg,
                                         'id': str(msg_id)
                                         },
           'time': time_stamp}, room=room)
-
-
-
 
 
 @socketio.on('join')
@@ -159,7 +162,6 @@ def on_join(data):
 
     username = data["username"]
     room = data["room"]
-
 
     join_room(room)
     # Broadcast that new user has joined
@@ -176,9 +178,6 @@ def on_leave(data):
     send({"msg": {'text':  username + " has left the " + room + " room."}}, room=room)
 
 
-
-
-
 @app.route('/rooms/list')
 def list_rooms():
     # TODO: implement logic that allows to list chats
@@ -186,27 +185,23 @@ def list_rooms():
     pass
 
 
-# a = {
-#     'room_name': 'test_room',
-#     'members': [{'user_id': "9082e49a-9850-457d-a47d-101d39191d8e"}, {'user_id': "c0b90118-ae8e-4960-883d-e83de9619a25"}]
-# }
-# @login_required
-
 @socketio.on('room-create')
 def create_room(data):
-
-    # TODO: notify all members (except admin) that they were added
     try:
 
         room_name = data['room_name']
         creator_id = current_user.user_id
-        members = {user['user_id'] for user in data['members']} | \
-                  {current_user.user_id}
-
+        members = {user['user_id'] for user in data['members']} | {creator_id}
         room_id = save_room(room_name, creator_id)
-        add_room_members(room_id, creator_id, members)
+        users_sids = get_users_sessions(members)
 
-        emit('room-created', {'message': 'Room created', 'status': 201})
+        for user_id, sid in users_sids:
+            print(f"sid = {sid} | room_name = {room_name}")
+            add_room_member(room_id, creator_id, user_id)
+            if sid:
+                join_room(sid=sid, room=room_name)
+                emit('room-created', {'message': f'You {sid} have been added to the chat', 'status': 201}, to=sid)
+
     except Exception as e:
 
         emit('room-created', {'message': e, 'status': 400})
@@ -222,27 +217,23 @@ def get_user():
     return jsonify({'user': {}}), 404
 
 
-b = {"room_name": "test2", "room_id": 1, "members": [{}]}
-
-
 @socketio.on('room-edit')
 @room_admin_checker
 def edit_room(data):
+    """We can not remove all users and after that add them again,
+    because we remove their session_id, and what to do with sid of new users ?"""
     room_id = data['room_id']
     room = Room.query.filter_by(room_id=room_id).first()
-    if room is None:
-        emit('room-edited', {'message': 'Room is not found', 'status': 401})
 
-    else:
-        room.name = data['room_name']
-        db.session.query(room_member).filter_by(room_id=room_id).delete()
-        db.session.commit()
+    room.name = data['room_name']
+    db.session.query(room_member).filter_by(room_id=room_id).delete()
+    db.session.commit()
 
-        members = {user['user_id'] for user in data['members']} | \
-                  {current_user.user_id}
-        add_room_members(room_id, room.creator_id, members)
+    members = {user['user_id'] for user in data['members']} | \
+              {current_user.user_id}
+    # add_room_members(room_id, room.creator_id, members)
 
-        emit('room-edited', {'message': 'Room edited', 'status': 200})
+    emit('room-edited', {'message': 'Room edited', 'status': 200})
 
 
 @app.route('/rooms/<room_id>')
@@ -255,8 +246,6 @@ def view_room(room_id):
 @room_admin_checker
 def delete_room(room_id):
     remove_room(room_id)
-    # TODO: update this room members' chats list
-    pass
 
 
 @app.route('/rooms/<room_id>/messages')

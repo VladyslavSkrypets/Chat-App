@@ -16,6 +16,7 @@ room_member = db.Table(
               nullable=False),
     db.Column('user_id', UUID_FIELD, db.ForeignKey('users.user_id'),
               nullable=False),
+    db.Column('datetime', default=datetime.datetime.utcnow()),
     PrimaryKeyConstraint('id'),
     UniqueConstraint('room_id', 'user_id', name='room_id_member_id_uq')
 )
@@ -28,7 +29,9 @@ class User(UserMixin, db.Model):
                         default=uuid.uuid4)
     email = db.Column(db.String, unique=True)
     username = db.Column(db.String(25), unique=True, nullable=False)
+    session_id = db.Column(db.String, unique=True)
     password = db.Column(db.String(), nullable=False)
+    datetime = db.Column(db.DateTime, default=datetime.datetime.utcnow())
 
     rooms = db.relationship('Room', secondary=room_member,
                             backref='users',
@@ -55,6 +58,7 @@ class Room(db.Model):
     name = db.Column(db.String, nullable=False)
     creator_id = db.Column(UUID_FIELD, db.ForeignKey('users.user_id'),
                            nullable=False)
+    datetime = db.Column(db.DateTime, default=datetime.datetime.utcnow())
 
     def __init__(self, name: str, creator_id: int):
         self.name = name
