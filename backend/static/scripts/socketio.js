@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#create_room').onclick = () => {
         let data = {
              "room_name": document.querySelector('#room_name').value,
-             "members": [{"user_id": "4208d144-e858-453c-96dd-acfbdf8544e5"}, {"user_id": "f666ef3b-e127-4812-b475-229ba51a529c"}]
+             "members": [{"user_id": "1f1e85b1-c155-4a8f-9c90-6eacb1e59732"}, {"user_id": "f666ef3b-e127-4812-b475-229ba51a529c"}]
         }
         socket.emit('room-create', data);
     }

@@ -16,7 +16,7 @@ room_member = db.Table(
               nullable=False),
     db.Column('user_id', UUID_FIELD, db.ForeignKey('users.user_id'),
               nullable=False),
-    db.Column('datetime', default=datetime.datetime.utcnow()),
+    db.Column('datetime', db.DateTime, default=datetime.datetime.utcnow()),
     PrimaryKeyConstraint('id'),
     UniqueConstraint('room_id', 'user_id', name='room_id_member_id_uq')
 )

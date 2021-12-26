@@ -223,14 +223,14 @@ def edit_room(data):
     """We can not remove all users and after that add them again,
     because we remove their session_id, and what to do with sid of new users ?"""
     room_id = data['room_id']
+    creator_id = current_user.user_id
     room = Room.query.filter_by(room_id=room_id).first()
 
     room.name = data['room_name']
     db.session.query(room_member).filter_by(room_id=room_id).delete()
     db.session.commit()
 
-    members = {user['user_id'] for user in data['members']} | \
-              {current_user.user_id}
+    members = {user['user_id'] for user in data['members']} | {creator_id}
     # add_room_members(room_id, room.creator_id, members)
 
     emit('room-edited', {'message': 'Room edited', 'status': 200})
