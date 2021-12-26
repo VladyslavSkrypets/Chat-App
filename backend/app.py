@@ -76,17 +76,26 @@ def load_user(id_: uuid.UUID = uuid.uuid4()):
 
 @socketio.on('connected')
 def connected():
-    user = db.session.query(User).filter(User.user_id == current_user.user_id).first()
-    user.session_id = request.sid
+    current_user.session_id = request.sid
     db.session.commit()
 
+#
+# @socketio.on('disconnect')
+# def disconnect():
+#     current_user.session_id = None
+#     db.session.commit()
 
-@socketio.on('disconnect')
-def disconnect():
-    print('user disconnected')
-    user = db.session.query(User).filter(User.user_id == current_user.user_id).first()
-    user.session_id = None
+
+def set_null_session():
+    current_user.session_id = None
+
+
+@app.route('/destroy-session', methods=['PATCH'])
+def destroy_session():
+    print('\n\n234234234234\n\n')
+    set_null_session()
     db.session.commit()
+    return {'success': True}
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -140,6 +149,7 @@ def logout():
 
 @socketio.on('incoming-msg')
 def on_message(data):
+    print(f'\n\n{data}\n\n')
     msg = data['msg']
     username = data['username']
     room = data['room']
@@ -188,10 +198,10 @@ def list_rooms():
 @socketio.on('room-create')
 def create_room(data):
     try:
-
+        print(data)
         room_name = data['room_name']
         creator_id = current_user.user_id
-        members = {user['user_id'] for user in data['members']} | {creator_id}
+        members = {user['user_id'] for user in data['members'] if user['user_id']} | {creator_id}
         room_id = save_room(room_name, creator_id)
         users_sids = get_users_sessions(members)
 
@@ -199,8 +209,12 @@ def create_room(data):
             print(f"sid = {sid} | room_name = {room_name}")
             add_room_member(room_id, creator_id, user_id)
             if sid:
-                join_room(sid=sid, room=room_name)
-                emit('room-created', {'message': f'You {sid} have been added to the chat', 'status': 201}, to=sid)
+                try:
+                    join_room(sid=sid, room=room_name)
+                    emit('room-created', {'message': f'You {sid} have been added to the chat', 'status': 201}, to=sid)
+                except Exception as e:
+                    set_null_session()
+                    db.session.commit()
 
     except Exception as e:
 
@@ -218,22 +232,85 @@ def get_user():
 
 
 @socketio.on('room-edit')
-@room_admin_checker
+# @room_admin_checker
 def edit_room(data):
-    """We can not remove all users and after that add them again,
-    because we remove their session_id, and what to do with sid of new users ?"""
-    room_id = data['room_id']
+    # room_id = data['room_id']
+    room_id = 6
     creator_id = current_user.user_id
+
     room = Room.query.filter_by(room_id=room_id).first()
+    old_room_name, new_room_name = room.name, data['room_name']
 
-    room.name = data['room_name']
-    db.session.query(room_member).filter_by(room_id=room_id).delete()
-    db.session.commit()
+    if new_room_name != old_room_name:
+        room.name = new_room_name
+        db.session.commit()
 
-    members = {user['user_id'] for user in data['members']} | {creator_id}
+    print(data)
+    new_members = {
+        user['user_id']
+        for user in data['members']
+        if user['user_id']
+    } | {str(creator_id)}
+
+    old_members = set(
+        map(
+            str, chain(*db.session.query(room_member.c.user_id).filter_by(room_id=room_id).all())
+        )
+    )
+
+    add_members = [('add', *data) for data in get_users_sessions(new_members - old_members)]
+    remove_members = [('remove', *data) for data in get_users_sessions(old_members - new_members)]
+    not_changed_members = [('skip', *data) for data in get_users_sessions(new_members & old_members)]
+
+    print(add_members)
+    print(remove_members)
+    print(not_changed_members)
+    for action_type, user_id, sid in add_members + remove_members + not_changed_members:
+        if action_type == 'add':
+            add_room_member(room_id, creator_id, user_id)
+            print(f"action_type = {action_type}, user_id = {user_id}, sid = {sid}")
+            if sid:
+                try:
+                    print()
+                    join_room(sid=sid, room=new_room_name)
+                    emit('room-created', {'message': f'You {sid} have been added to the chat', 'status': 201}, to=sid)
+                except Exception as e:
+                    print(e)
+                    set_null_session()
+                    db.session.commit()
+
+        elif action_type == 'remove':
+            room_members = db.session.query(room_member.c.id).filter_by(user_id=user_id)
+            room_messages = (
+                db.session.query(Messages)
+                .filter(Messages.room_member_id.in_(chain(*room_members.all())))
+            )
+            room_messages.delete()
+            (
+                db.session.query(room_member)
+                    .filter(room_member.c.user_id == user_id)
+                    .filter(room_member.c.room_id == room_id).delete()
+            )
+            db.session.commit()
+            if sid:
+                try:
+                    leave_room(sid=sid, room=old_room_name)
+                    emit('room-created', {'message': f'You {sid} have been deleted to the chat', 'status': 201}, to=sid)
+                except Exception as e:
+                    print(e)
+                    set_null_session()
+                    db.session.commit()
+
+        else:
+            print('hit skip')
+            leave_room(sid=sid, room=old_room_name)
+            # emit('user_re_joined', {"msg": {'text':  sid + " has left the " + old_room_name + " room."}}, to=sid)
+
+            join_room(sid=sid, room=new_room_name)
+            emit('user_re_joined', {'new_room': new_room_name}, to=sid)
     # add_room_members(room_id, room.creator_id, members)
 
-    emit('room-edited', {'message': 'Room edited', 'status': 200})
+    # emit('room-edited', {'message': 'Room edited', 'status': 200})
 
 
 @app.route('/rooms/<room_id>')
@@ -298,6 +375,12 @@ def get_chats():
 @app.route('/curr_user')
 def curr_user():
     return current_user.username
+
+
+@app.route('/test-page-close')
+def on_close_page():
+    print('HITHITHIT')
+    return {'success': True}
 
 
 if __name__ == '__main__':

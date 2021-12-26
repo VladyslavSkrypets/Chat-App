@@ -34,6 +34,7 @@
                     <input type="text" id="user_id_1" placeholder="User id 1" autocomplete="off">
                     <input type="text" id="user_id_2" placeholder="User id 2" autocomplete="off">
                     <button type="button" id="create_room">Create</button>
+                    <button type="button" id="edit_room">Change</button>
                 </div>
             </div>
         </div>
@@ -43,6 +44,18 @@
     <script type="text/javascript">
         const username = `{{ username }}`;
     </script>
+<script>
+    window.onbeforeunload = function (e) {
+        fetch('destroy-session',
+            {
+                method: 'PATCH'
+            }
+        )
+          .then(response => response.json())
+          .then(data => console.log(data));
+        return undefined;
+    }
+</script>
 <!--    SocketIO JS-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
 
