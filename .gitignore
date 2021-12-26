@@ -4,4 +4,4 @@ venv
 flask-session/
 backend/.env
 /backend/logs/
-__pycache__
+**/__pycache__
