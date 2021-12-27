@@ -9,7 +9,7 @@ const actions = {
     if (!sended) {
       const { dialogs } = getState();
       const { currentDialogId } = dialogs;
-      if (currentDialogId === message.chatUUID) {
+      if (currentDialogId === message.room) {
         dispatch({
           type: 'MESSAGES:ADD_MESSAGE',
           payload: message,
@@ -30,11 +30,11 @@ const actions = {
     type: 'MESSAGES:SET_IS_LOADING',
     payload: bool,
   }),
-  fetchMessages: (chatUUID) => (dispatch, getState) => {
+  fetchMessages: (room) => (dispatch, getState) => {
     dispatch(actions.setIsLoading(true));
     const { dialogs } = getState();
     const { items } = dialogs;
-    const messages = items.find((c) => c.chatUUID === chatUUID).messages;
+    const messages = items.find((c) => c.room === room).messages;
     dispatch({ type: 'MESSAGES:SET_ITEMS', payload: messages });
   },
 };

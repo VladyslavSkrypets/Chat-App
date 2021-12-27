@@ -5,8 +5,8 @@ export default {
     const res = await instance.get('/api/chat-members');
     return res.data;
   },
-  getChatMembers: async (chatUUID) => {
-    const res = await instance.get(`/api/chat-members/${chatUUID}`);
+  getChatMembers: async (room) => {
+    const res = await instance.get(`/api/chat-members/${room}`);
     return res.data;
   },
 };

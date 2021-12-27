@@ -11,7 +11,7 @@ const ChatInfo = ({
   user,
   setChatMembers,
 }) => {
-  const currentChatObj = items.find((i) => i.chatUUID === currentDialogId);
+  const currentChatObj = items.find((i) => i.room === currentDialogId);
   const [editMode, setEditMode] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
   const [users, setUsers] = useState([]);
@@ -51,7 +51,7 @@ const ChatInfo = ({
   };
   const onAddMembers = () => {
     const chatMembersDTO = users.map((u) => {
-      return { userEmail: u.email, chatUUID: currentDialogId };
+      return { userEmail: u.email, room: currentDialogId };
     });
     socket.emit('ADD_CHAT_MEMBERS', chatMembersDTO);
   };
@@ -64,7 +64,7 @@ const ChatInfo = ({
   const onMemberRemove = (email) => {
     socket.emit('REMOVE_CHAT_MEMBER', {
       userEmail: email,
-      chatUUID: currentDialogId,
+      room: currentDialogId,
     });
   };
   return (

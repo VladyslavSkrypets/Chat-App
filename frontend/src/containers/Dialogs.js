@@ -47,7 +47,7 @@ const Dialogs = ({
       history.push('/');
       setCurrentDialogId('');
       const filt = items;
-      const index = filt.findIndex((c) => c.chatUUID === res.chatUUID);
+      const index = filt.findIndex((c) => c.room === res.room);
       filt.splice(index, 1);
       setFiltredItems(filt);
     });

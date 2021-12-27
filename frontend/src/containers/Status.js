@@ -12,7 +12,7 @@ const Status = ({ currentDialogId, user, dialogs, setCurrentDialogId }) => {
     return null;
   }
   const currentDialogObj = dialogs.find(
-    (dialog) => dialog.chatUUID === currentDialogId,
+    (dialog) => dialog.room === currentDialogId,
   );
   console.log(user);
   // let partner = false;
