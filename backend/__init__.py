@@ -29,7 +29,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{os.getenv('DB_USER')}:{o
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'secret-key'
 
-socketio = SocketIO(app, manage_session=False)
+socketio = SocketIO(app, cors_allowed_origins="*", manage_session=False)
 db = SQLAlchemy(app)
 login = LoginManager(app)
 login.init_app(app)

@@ -1,9 +1,8 @@
 import logging
 import os
-from flask import request, make_response, abort, jsonify, Response, render_template, redirect, url_for
+from flask import request, abort, jsonify, render_template, redirect, url_for
 from __init__ import app, socketio, login
 from wtform_fields import *
-from models import *
 from schemas import *
 from passlib.hash import pbkdf2_sha256
 from flask_login import login_user, current_user, login_required, logout_user
@@ -92,7 +91,6 @@ def set_null_session():
 
 @app.route('/destroy-session', methods=['PATCH'])
 def destroy_session():
-    print('\n\n234234234234\n\n')
     set_null_session()
     db.session.commit()
     return {'success': True}
@@ -154,16 +152,23 @@ def on_message(data):
     username = data['username']
     room = data['room']
     user_id = User.query.filter_by(username=username).first().user_id
-    reply_to_id = data.get('reply_to_id')
+    reply_to_id = data['reply_to_id']
     # Set timestamp
     sent_ts = datetime.datetime.utcnow()
     time_stamp = datetime.datetime.strftime(sent_ts, '%b-%d %I:%M%p')
     msg_id = save_message(user_id, room, sent_ts, msg, reply_to_id)
 
-    send({'username': username, 'msg': {'text': msg,
-                                        'id': str(msg_id)
-                                        },
-          'time': time_stamp}, room=room)
+    send(
+        {
+            'username': username,
+            'msg': {
+                'text': msg,
+                'id': str(msg_id)
+            },
+            'time': time_stamp,
+            'room': room
+        }, room=room
+    )
 
 
 @socketio.on('join')
@@ -308,15 +313,6 @@ def edit_room(data):
 
             join_room(sid=sid, room=new_room_name)
             emit('user_re_joined', {'new_room': new_room_name}, to=sid)
-    # add_room_members(room_id, room.creator_id, members)
-
-    # emit('room-edited', {'message': 'Room edited', 'status': 200})
-
-
-@app.route('/rooms/<room_id>')
-# @login_required
-def view_room(room_id):
-    pass
 
 
 @socketio.on('room-delete')
