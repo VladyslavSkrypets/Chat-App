@@ -50,10 +50,10 @@ const ChatInfo = ({
     );
   };
   const onAddMembers = () => {
-    const chatMembersDTO = users.map((u) => {
-      return { userEmail: u.email, room: currentDialogId };
+    const chatMembersDTO = users.map((user) => {
+      return { userEmail: user.user_id, room_name: currentDialogId }; // currentDialogId such as room name
     });
-    socket.emit('ADD_CHAT_MEMBERS', chatMembersDTO);
+    socket.emit('room-edit', chatMembersDTO);
   };
   const onSelectUser = (selUser) => {
     const index = users.findIndex((u) => u.email === selUser.email);

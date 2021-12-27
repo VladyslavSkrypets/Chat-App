@@ -19,8 +19,6 @@ const Dialogs = ({
 }) => {
   const [repliedMessage, setRepliedMessage] = useState(null);
 
-  if (!currentDialogId) return <Empty description="Откройте диалог" />;
-
   const messagesRef = useRef(null);
 
   const onNewMessage = (data) => {
@@ -31,13 +29,16 @@ const Dialogs = ({
     if (currentDialogId) {
       fetchMessages(currentDialogId);
     }
-    socket.on('ADD_MESSAGE', onNewMessage);
-    return () => socket.off('ADD_MESSAGE');
+    socket.on('incoming-msg', onNewMessage);
+    return () => socket.off('incoming-msg');
   }, [currentDialogId]);
 
   useEffect(() => {
-    messagesRef.current.scrollTo(0, 999999);
+    messagesRef.current?.scrollTo(0, 999999);
   }, [items]);
+
+  if (!currentDialogId) return <Empty description="Откройте диалог" />;
+
   return (
     <BaseMessages
       user={user}

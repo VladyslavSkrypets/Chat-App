@@ -12,7 +12,7 @@ const Avatar = ({ user }) => {
       />
     );
   } else {
-    const { color, colorLighten } = generateAvatarFromHash(user.uuid);
+    const { color, colorLighten } = generateAvatarFromHash('22222222-2222-2222-2222-222222222222');
     const firstChar = user.name[0].toUpperCase();
     return (
       <div

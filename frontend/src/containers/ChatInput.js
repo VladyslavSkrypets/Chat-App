@@ -6,10 +6,11 @@ import { socket } from '../core';
 
 const ChatInput = ({ currentDialogId, user, repliedMessageId }) => {
   const onSendMessage = (value, room) => {
-    socket.emit('ADD_MESSAGE', {
-      text: value,
+    socket.emit('incoming-msg', {
+      msg: value,
       room: room,
-      userEmail: user.data.email,
+      username: user.data.name,
+      reply_to_id: repliedMessageId
     });
   };
 

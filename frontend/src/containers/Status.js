@@ -15,13 +15,6 @@ const Status = ({ currentDialogId, user, dialogs, setCurrentDialogId }) => {
     (dialog) => dialog.room === currentDialogId,
   );
   console.log(user);
-  // let partner = false;
-  //
-  // if (currentDialogObj.ownerEmail === user.email) {
-  //   partner = currentDialogObj.partner;
-  // } else {
-  //   partner = currentDialogObj.author;
-  // }
   const toggleShowModal = () => {
     console.log(showModal);
     setShowModal(!showModal);
@@ -30,7 +23,7 @@ const Status = ({ currentDialogId, user, dialogs, setCurrentDialogId }) => {
     history.push('/');
     setCurrentDialogId('');
   }
-  if (currentDialogObj.isGroup)
+  if (true)
     return (
       <>
         <Modal

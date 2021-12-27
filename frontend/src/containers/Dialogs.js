@@ -38,11 +38,11 @@ const Dialogs = ({
   }, [items]);
 
   useEffect(() => {
-    socket.on('ADD_CHAT', (res) => {
+    socket.on('add_chat', (res) => {
       addDialog(res);
       setFiltredItems([...filtred, res]);
     });
-    socket.on('REMOVE_CHAT', (res) => {
+    socket.on('remove_chat', (res) => {
       removeDialog(res);
       history.push('/');
       setCurrentDialogId('');
@@ -52,12 +52,12 @@ const Dialogs = ({
       setFiltredItems(filt);
     });
     socket.on('CONNECT', (res) => setDialogs(res.chats));
-    socket.on('ADD_MESSAGE', (res) => addMessageToDialog(res));
+    socket.on('add_message', (res) => addMessageToDialog(res));
     socket.on('UPDATE_CHAT_PHOTO', (res) => changeDialogPhoto(res));
     return () => {
-      socket.off('ADD_CHAT');
+      socket.off('room-create');
       socket.off('CONNECT');
-      socket.off('ADD_MESSAGE');
+      socket.off('incoming-msg');
     };
   }, []);
 

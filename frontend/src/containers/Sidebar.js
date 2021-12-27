@@ -24,16 +24,6 @@ const SidebarContainer = ({ user }) => {
   const onSearch = async (value) => {
     setIsLoading(true);
     const { data } = await userApi.findUsersByEmail(value);
-    // .then(({ data }) => {
-    //   console.log(data);
-    //   setUsers(data);
-    //   console.log(users);
-    //   setIsLoading(false);
-    // })
-    // .catch(() => {
-    //   setUsers([]);
-    //   setIsLoading(true);
-    // });
     const index = data.findIndex((u) => u.email == user.email);
     if (index !== -1) data.splice(index, 1);
     setUsers(
@@ -45,27 +35,17 @@ const SidebarContainer = ({ user }) => {
   };
 
   const onAddDialog = () => {
-    const usersEmails = users.filter((us) => us.checked).map((us) => us.email);
+    const usersData = users.filter((us) => us.checked).map((us) => {return {'user_id': us.user_id}});
 
     socket
       .emit('ADD_CHAT', {
-        chatName: chatName || 'NewChat',
-        isGroup: true,
-        users: [...usersEmails, user.email],
+        room_name: chatName || 'NewChat',
+        users: [...usersData, user.user_id],
       })
       .then((res) => {
         if (res.ok) onClose();
         else setIsLoading(false);
       });
-    // chatsApi
-    //   .create({
-    //     partner: selectedUserId,
-    //     text: messageText,
-    //   })
-    //   .then(onClose)
-    //   .catch(() => {
-    //     setIsLoading(false);
-    //   });
   };
 
   const handleChangeInput = async (value) => {
