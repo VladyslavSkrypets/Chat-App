@@ -9,11 +9,6 @@ import './Home.scss';
 const Home = () => {
   const history = useHistory();
 
-  const logOut = () => {
-    localStorage.clear();
-    userApi.logout();
-    history.push('/login', { from: 'Home' });
-  };
   return (
     <section className="home">
       <div className="chat">
@@ -22,9 +17,6 @@ const Home = () => {
           <div className="chat__dialog-header">
             <div />
             <Status online />
-            <Button onClick={logOut} type="link" shape="circle">
-              Выйти
-            </Button>
           </div>
           <div className="chat__dialog-messages">
             <Messages />

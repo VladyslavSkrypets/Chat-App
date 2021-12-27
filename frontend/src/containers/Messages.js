@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { connect } from 'react-redux';
 
-import { messagesActions } from '../redux/actions';
+import { dialogsActions, messagesActions } from '../redux/actions'
 import socket from '../core/socket';
 
 import { Messages as BaseMessages } from '../components';
@@ -15,6 +15,7 @@ const Dialogs = ({
   items,
   user,
   isLoading,
+  setRepliedMessageId
 }) => {
   const [repliedMessage, setRepliedMessage] = useState(null);
 
@@ -46,6 +47,7 @@ const Dialogs = ({
       currentDialog={dialogs.items.find((c) => c.chatUUID === currentDialogId)}
       repliedMessage={repliedMessage}
       onReplyMessage={(message) => {
+        setRepliedMessageId(message?.messagesUUID ?? null);
         setRepliedMessage(message);
       }}
     />
@@ -61,4 +63,5 @@ export default connect(
     user: user.data,
   }),
   messagesActions,
+  dialogsActions,
 )(Dialogs);

@@ -2,6 +2,7 @@ const initialState = {
   items: [],
   currentDialogId: window.location.pathname.split('dialog/')[1],
   isLoading: false,
+  repliedMessageId: null,
 };
 
 export default (state = initialState, { type, payload }) => {
@@ -15,6 +16,11 @@ export default (state = initialState, { type, payload }) => {
       return {
         ...state,
         currentDialogId: payload,
+      };
+    case 'DIALOGS:SET_REPLIED_MESSAGE_ID':
+      return {
+        ...state,
+        repliedMessageId: payload,
       };
     case 'DIALOGS:ADD_ITEM':
       return {

@@ -16,6 +16,10 @@ const actions = {
     type: 'DIALOGS:SET_CURRENT_DIALOG_ID',
     payload: id,
   }),
+  setRepliedMessageId: (repliedMessageID) => ({
+    type: 'DIALOGS:SET_REPLIED_MESSAGE_ID',
+    payload: repliedMessageID,
+  }),
   addDialog: (item) => ({
     type: 'DIALOGS:ADD_ITEM',
     payload: item,

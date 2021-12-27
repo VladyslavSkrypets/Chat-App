@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { messagesActions } from '../redux/actions';
 import { socket } from '../core';
 
-const ChatInput = ({ currentDialogId, user }) => {
+const ChatInput = ({ currentDialogId, user, repliedMessageId }) => {
   const onSendMessage = (value, chatUUID) => {
     socket.emit('ADD_MESSAGE', {
       text: value,
@@ -24,6 +24,7 @@ const ChatInput = ({ currentDialogId, user }) => {
 export default connect(
   ({ dialogs, user }) => ({
     currentDialogId: dialogs.currentDialogId,
+    repliedMessageId: dialogs.repliedMessageId,
     user: user,
   }),
   messagesActions,
