@@ -147,7 +147,7 @@ def logout():
 
 @socketio.on('incoming-msg')
 def on_message(data):
-    print(f'\n\n{data}\n\n')
+
     msg = data['msg']
     username = data['username']
     room = data['room']
@@ -158,16 +158,15 @@ def on_message(data):
     time_stamp = datetime.datetime.strftime(sent_ts, '%b-%d %I:%M%p')
     msg_id = save_message(user_id, room, sent_ts, msg, reply_to_id)
 
-    send(
-        {
-            'username': username,
-            'msg': {
-                'text': msg,
-                'id': str(msg_id)
-            },
-            'time': time_stamp,
-            'room': room
-        }, room=room
+    emit('add_message', {
+        'username': username,
+        'msg': {
+            'text': msg,
+            'id': str(msg_id)
+        },
+        'time': time_stamp,
+        'room': room
+    }, room=room
     )
 
 
@@ -216,14 +215,15 @@ def create_room(data):
             if sid:
                 try:
                     join_room(sid=sid, room=room_name)
-                    emit('room-created', {'message': f'You {sid} have been added to the chat', 'status': 201}, to=sid)
+                    """emit to front all users data (user_id, name, email)"""
+                    emit('add_chat', {'message': f'You {sid} have been added to the chat', 'status': 201}, to=sid)
                 except Exception as e:
                     set_null_session()
                     db.session.commit()
 
     except Exception as e:
 
-        emit('room-created', {'message': e, 'status': 400})
+        emit('room-create', {'message': e, 'status': 400})
 
 
 @app.route('/get-user')
@@ -239,23 +239,19 @@ def get_user():
 @socketio.on('room-edit')
 # @room_admin_checker
 def edit_room(data):
-    # room_id = data['room_id']
-    room_id = 6
+    room_name = data['room_name']
     creator_id = current_user.user_id
 
-    room = Room.query.filter_by(room_id=room_id).first()
+    room = Room.query.filter_by(name=room_name).first()
+    room_id = room.room_id
+
     old_room_name, new_room_name = room.name, data['room_name']
 
     if new_room_name != old_room_name:
         room.name = new_room_name
         db.session.commit()
 
-    print(data)
-    new_members = {
-        user['user_id']
-        for user in data['members']
-        if user['user_id']
-    } | {str(creator_id)}
+    new_members = {user['user_id'] for user in data['members'] if user['user_id']} | {str(creator_id)}
 
     old_members = set(
         map(
@@ -267,16 +263,11 @@ def edit_room(data):
     remove_members = [('remove', *data) for data in get_users_sessions(old_members - new_members)]
     not_changed_members = [('skip', *data) for data in get_users_sessions(new_members & old_members)]
 
-    print(add_members)
-    print(remove_members)
-    print(not_changed_members)
     for action_type, user_id, sid in add_members + remove_members + not_changed_members:
         if action_type == 'add':
             add_room_member(room_id, creator_id, user_id)
-            print(f"action_type = {action_type}, user_id = {user_id}, sid = {sid}")
             if sid:
                 try:
-                    print()
                     join_room(sid=sid, room=new_room_name)
                     emit('room-created', {'message': f'You {sid} have been added to the chat', 'status': 201}, to=sid)
                 except Exception as e:
@@ -293,8 +284,8 @@ def edit_room(data):
             room_messages.delete()
             (
                 db.session.query(room_member)
-                    .filter(room_member.c.user_id == user_id)
-                    .filter(room_member.c.room_id == room_id).delete()
+                .filter(room_member.c.user_id == user_id)
+                .filter(room_member.c.room_id == room_id).delete()
             )
             db.session.commit()
             if sid:
@@ -309,8 +300,6 @@ def edit_room(data):
         else:
             print('hit skip')
             leave_room(sid=sid, room=old_room_name)
-            # emit('user_re_joined', {"msg": {'text':  sid + " has left the " + old_room_name + " room."}}, to=sid)
-
             join_room(sid=sid, room=new_room_name)
             emit('user_re_joined', {'new_room': new_room_name}, to=sid)
 
@@ -319,6 +308,7 @@ def edit_room(data):
 @room_admin_checker
 def delete_room(room_id):
     remove_room(room_id)
+    emit('remove_chat', {'room_id': room_id})
 
 
 @app.route('/rooms/<room_id>/messages')
