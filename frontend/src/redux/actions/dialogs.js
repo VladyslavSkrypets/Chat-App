@@ -1,9 +1,9 @@
 // import { chatsApi } from '../../utils/api';
-const splitWithChat = (getState, chatUUID = null) => {
+const splitWithChat = (getState, room = null) => {
   const { dialogs } = getState();
-  if (!chatUUID) chatUUID = dialogs.currentDialogId;
+  if (!room) room = dialogs.currentDialogId;
   const chats = [...dialogs.items];
-  const chatIndex = chats.findIndex((ch) => ch.chatUUID === chatUUID);
+  const chatIndex = chats.findIndex((ch) => ch.room === room);
   const chat = chats.splice(chatIndex, 1)[0];
   return { chat, chats };
 };
@@ -32,8 +32,8 @@ const actions = {
 
     dispatch(actions.setDialogs([...chats, { ...chat, messages }]));
   },
-  changeDialogPhoto: ({ photo, chatUUID }) => (dispatch, getState) => {
-    const { chats, chat } = splitWithChat(getState, chatUUID);
+  changeDialogPhoto: ({ photo, room }) => (dispatch, getState) => {
+    const { chats, chat } = splitWithChat(getState, room);
     dispatch(actions.setDialogs([...chats, { ...chat, photo }]));
   },
   setChatMembers: (chatMembers) => (dispatch, getState) => {
@@ -41,8 +41,8 @@ const actions = {
     console.log(chatMembers);
     dispatch(actions.setDialogs([...chats, { ...chat, chatMembers }]));
   },
-  removeDialog: (chatUUID) => (dispatch, getState) => {
-    const { chats } = splitWithChat(getState, chatUUID);
+  removeDialog: (room) => (dispatch, getState) => {
+    const { chats } = splitWithChat(getState, room);
     dispatch(actions.setDialogs([...chats]));
   },
 };

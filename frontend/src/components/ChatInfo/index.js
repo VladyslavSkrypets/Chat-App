@@ -3,7 +3,7 @@ import React from 'react';
 import './ChatInfo.scss';
 const ChatInfo = ({
   editMode,
-  chatUUID,
+  room,
   chatName,
   photo,
   value,
@@ -22,7 +22,7 @@ const ChatInfo = ({
   return (
     <div className={'chatInfo'}>
       {isMe ? <Button onClick={onToggleEdit}>Edit</Button> : null}
-      <Avatar user={{ photo, name: chatName, uuid: chatUUID }} />
+      <Avatar user={{ photo, name: chatName, uuid: room }} />
       {editMode ? (
         <div className={'fileUpload'}>
           <label htmlFor="file">Choose images to upload (PNG, JPG)</label>

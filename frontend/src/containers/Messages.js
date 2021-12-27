@@ -32,7 +32,7 @@ const Dialogs = ({
       fetchMessages(currentDialogId);
     }
     socket.on('ADD_MESSAGE', onNewMessage);
-    return () => socket.off('SERVER:NEW_MESSAGE');
+    return () => socket.off('ADD_MESSAGE');
   }, [currentDialogId]);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ const Dialogs = ({
       blockRef={messagesRef}
       items={items}
       isLoading={isLoading && !user}
-      currentDialog={dialogs.items.find((c) => c.chatUUID === currentDialogId)}
+      currentDialog={dialogs.items.find((c) => c.room === currentDialogId)}
       repliedMessage={repliedMessage}
       onReplyMessage={(message) => {
         setRepliedMessageId(message?.messagesUUID ?? null);
@@ -61,7 +61,5 @@ export default connect(
     items: messages.items,
     isLoading: messages.isLoading,
     user: user.data,
-  }),
-  messagesActions,
-  dialogsActions,
+  }),{ ...messagesActions,...dialogsActions }
 )(Dialogs);

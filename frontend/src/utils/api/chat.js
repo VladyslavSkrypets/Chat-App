@@ -2,11 +2,11 @@ import { instance } from '../../core';
 // todo: use aliases
 
 export default {
-  postChatPhoto: async (file, chatUUID) => {
+  postChatPhoto: async (file, room) => {
     const formData = new FormData();
     formData.append('image', file);
     return await instance.post('/api/chats/file', formData, {
-      params: { chatUUID },
+      params: { room },
     });
   },
   getAll: async () => {

@@ -13,7 +13,7 @@ const getMessageTime = (createdAt) => {
 };
 
 const DialogItem = ({
-  chatUUID,
+  room,
   messages,
   chatMembers,
   unread,
@@ -24,23 +24,23 @@ const DialogItem = ({
   currentDialogId,
   onSelect,
 }) => (
-  <Link to={`/dialog/${chatUUID}`}>
+  <Link to={`/dialog/${room}`}>
     <div
       className={classNames('dialogs__item', {
         'dialogs__item--online': false,
         // user.isOnline,
-        'dialogs__item--selected': currentDialogId === chatUUID,
+        'dialogs__item--selected': currentDialogId === room,
       })}
-      onClick={() => onSelect(chatUUID)}
+      onClick={() => onSelect(room)}
     >
       <div className="dialogs__item-avatar">
         <Avatar
           user={
             isGroup
-              ? { photo, name: chatName, uuid: chatUUID }
+              ? { photo, name: chatName, uuid: room }
               : {
                   ...chatMembers.find((cm) => cm.email !== userEmail),
-                  uuid: chatUUID,
+                  uuid: room,
                 }
           }
         />

@@ -5,10 +5,10 @@ import { messagesActions } from '../redux/actions';
 import { socket } from '../core';
 
 const ChatInput = ({ currentDialogId, user, repliedMessageId }) => {
-  const onSendMessage = (value, chatUUID) => {
+  const onSendMessage = (value, room) => {
     socket.emit('ADD_MESSAGE', {
       text: value,
-      chatUUID: chatUUID,
+      room: room,
       userEmail: user.data.email,
     });
   };
