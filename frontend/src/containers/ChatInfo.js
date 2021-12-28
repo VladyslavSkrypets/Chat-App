@@ -40,14 +40,16 @@ const ChatInfo = ({
   };
   const onSearch = async (val) => {
     setValue(val);
-    const { data } = await userApi.findUsersByEmail(val);
-    const index = data.findIndex((u) => u.email == user.email);
-    if (index !== -1) data.splice(index, 1);
-    setUsers(
-      data.map((us) => {
-        return { ...us, checked: false };
-      }),
-    );
+    const { data } = await userApi.findUsersByNickname(val);
+    if (data.length) {
+      const index = data.findIndex((u) => u.email == user.email);
+      if (index !== -1) data.splice(index, 1);
+      setUsers(
+        data.map((us) => {
+          return { ...us, checked: false };
+        }),
+      );
+    }
   };
   const onAddMembers = () => {
     const chatMembersDTO = users.map((user) => {

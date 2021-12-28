@@ -9,7 +9,7 @@ const ChatInput = ({ currentDialogId, user, repliedMessageId }) => {
     socket.emit('incoming-msg', {
       msg: value,
       room: room,
-      username: user.data.name,
+      username: user.data.username,
       reply_to_id: repliedMessageId
     });
   };

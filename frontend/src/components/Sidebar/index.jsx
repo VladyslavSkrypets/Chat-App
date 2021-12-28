@@ -1,6 +1,4 @@
-/* eslint-disable no-unused-vars */
 import React from 'react';
-// eslint-disable-next-line no-unused-vars
 import { Button, Modal, Select, Input, Form } from 'antd';
 import { TeamOutlined, FormOutlined } from '@ant-design/icons';
 import { Dialogs } from '../../containers';
@@ -59,7 +57,7 @@ const Sidebar = ({
         ]}
       >
         <Form className="add-dialog-form">
-          <Form.Item label="Введите имя пользователя или E-Mail">
+          <Form.Item label="Введите имя пользователя">
             <input
               value={inputValue}
               onChange={onChangeInput}

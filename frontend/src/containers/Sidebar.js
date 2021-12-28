@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { userApi } from '../utils/api';
@@ -23,15 +21,18 @@ const SidebarContainer = ({ user }) => {
 
   const onSearch = async (value) => {
     setIsLoading(true);
-    const { data } = await userApi.findUsersByEmail(value);
-    const index = data.findIndex((u) => u.email == user.email);
-    if (index !== -1) data.splice(index, 1);
-    setUsers(
-      data.map((us) => {
-        return { ...us, checked: false };
-      }),
-    );
-    setIsLoading(false);
+    const { data } = await userApi.findUsersByNickname(value);
+    console.log(data)
+    if (data.length) {
+      const index = data.findIndex((u) => u.email == user.email);
+      if (index !== -1) data.splice(index, 1);
+      setUsers(
+        data.map((us) => {
+          return { ...us, checked: false };
+        }),
+      );
+      setIsLoading(false);
+    }
   };
 
   const onAddDialog = () => {
