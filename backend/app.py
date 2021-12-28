@@ -1,5 +1,6 @@
-import logging
 import os
+import jwt
+import logging
 from flask import request, abort, jsonify, render_template, redirect, url_for
 from __init__ import app, socketio, login
 from wtform_fields import *
@@ -83,6 +84,25 @@ def connected():
 # def disconnect():
 #     current_user.session_id = None
 #     db.session.commit()
+
+
+@app.route('/get-user-data')
+def get_user_data():
+    token = request.headers['Authorization'].replace('Bearer ', '')
+    decoded_data = jwt.decode(token, options={"verify_signature": False})
+    user = User.query.filter_by(user_id=decoded_data['userid']).first()
+
+    user_data = {
+        'user_id': decoded_data['userid'],
+        'email': decoded_data['email'],
+        'username': decoded_data['name']
+    }
+
+    if not bool(user):
+        db.session.add(User(**user_data))
+        db.session.commit()
+
+    return user_data
 
 
 def set_null_session():
@@ -228,12 +248,12 @@ def create_room(data):
 
 @app.route('/get-user')
 def get_user():
-    user_email = request.args.get('user_email', '')
-    user = User.query.filter_by(User.email.like(f'%{user_email}%')).first()
+    user_name = request.args.get('name', '')
+    user = User.query.filter(User.username.like(f'%{user_name}%')).all()
     if bool(user):
-        return jsonify({'user': UserSchema().dump(user)}), 200
+        return jsonify(UserSchema().dump(user, many=True))
 
-    return jsonify({'user': {}}), 404
+    return jsonify({'users': []})
 
 
 @socketio.on('room-edit')
@@ -361,12 +381,6 @@ def get_chats():
 @app.route('/curr_user')
 def curr_user():
     return current_user.username
-
-
-@app.route('/test-page-close')
-def on_close_page():
-    print('HITHITHIT')
-    return {'success': True}
 
 
 if __name__ == '__main__':

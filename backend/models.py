@@ -25,24 +25,16 @@ room_member = db.Table(
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
-    user_id = db.Column(UUID_FIELD, primary_key=True,
-                        default=uuid.uuid4)
+    user_id = db.Column(UUID_FIELD, primary_key=True)
     email = db.Column(db.String, unique=True)
     username = db.Column(db.String(25), unique=True, nullable=False)
     session_id = db.Column(db.String, unique=True)
-    password = db.Column(db.String(), nullable=False)
+    # password = db.Column(db.String(), nullable=False)
     datetime = db.Column(db.DateTime, default=datetime.datetime.utcnow())
 
     rooms = db.relationship('Room', secondary=room_member,
                             backref='users',
                             cascade="all,delete")
-
-    def __init__(self, username: str, password: str):
-        self.username = username
-        self.password = password
-
-    def __repr__(self):
-        return '<User %r>' % self.username
 
     def get_id(self):
         return self.user_id
@@ -60,10 +52,6 @@ class Room(db.Model):
                            nullable=False)
     datetime = db.Column(db.DateTime, default=datetime.datetime.utcnow())
 
-    def __init__(self, name: str, creator_id: int):
-        self.name = name
-        self.creator_id = creator_id
-
 
 class Messages(db.Model):
     __tablename__ = 'messages'
@@ -78,11 +66,3 @@ class Messages(db.Model):
         UUID_FIELD, db.ForeignKey('messages.message_id'),
         nullable=True
     )
-
-    def __init__(self, room_member_id: uuid.UUID,
-                 sent_at: datetime.datetime,
-                 msg_text: str, reply_to_id: uuid.UUID):
-        self.room_member_id = room_member_id
-        self.message_text = msg_text
-        self.send_at = sent_at
-        self.is_reply_to = reply_to_id
