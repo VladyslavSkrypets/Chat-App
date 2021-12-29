@@ -13,7 +13,8 @@ const getMessageTime = (createdAt) => {
 };
 
 const DialogItem = ({
-  room,
+  name,
+  room_id,
   messages,
   chatMembers,
   unread,
@@ -24,43 +25,37 @@ const DialogItem = ({
   currentDialogId,
   onSelect,
 }) => (
-  <Link to={`/dialog/${room}`}>
+  <Link to={`/dialog/${room_id}`}>
     <div
       className={classNames('dialogs__item', {
         'dialogs__item--online': false,
         // user.isOnline,
-        'dialogs__item--selected': currentDialogId === room,
+        'dialogs__item--selected': currentDialogId === room_id,
       })}
-      onClick={() => onSelect(room)}
+      onClick={() => onSelect(room_id)}
     >
       <div className="dialogs__item-avatar">
         <Avatar
-          user={
-            isGroup
-              ? { photo, name: chatName, uuid: room }
-              : {
-                  ...chatMembers.find((cm) => cm.email !== userEmail),
-                  uuid: room,
-                }
+          user={{ photo, name: name, uuid: room_id }
           }
         />
       </div>
       <div className="dialogs__item-info">
         <div className="dialogs__item-info-top">
-          <b>{chatName}</b>
+          <b>{name}</b>
           <span>
-            {messages.length
+            {/* {messages.length
               ? getMessageTime(messages[messages.length - 1].date)
-              : null}
+              : null} */}
           </span>
         </div>
         <div className="dialogs__item-info-bottom">
-          <p>
+          {/* <p>
             {messages.length
               ? messages[messages.length - 1].text ??
                 messages[messages.length - 1].photo
               : null}
-          </p>
+          </p> */}
           {<IconReaded isMe={true} isReaded={true} />}
           {unread > 0 && (
             <div className="dialogs__item-info-bottom-count">

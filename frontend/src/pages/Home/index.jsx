@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Button } from 'antd';
 import { Messages, ChatInput, Status, Sidebar } from '../../containers';
-import { userApi } from '../../utils/api';
 
 import './Home.scss';
 
@@ -12,8 +11,6 @@ const Home = () => {
 
   useEffect(() => {
     localStorage.setItem('accessToken', token ? token : localStorage.getItem('accessToken'));
-    console.log(token, history);
-    userApi.getMe()
     history.replace('/');
   }, [])
 

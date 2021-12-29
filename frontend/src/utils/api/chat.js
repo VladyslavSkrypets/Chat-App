@@ -10,6 +10,6 @@ export default {
     });
   },
   getAll: async () => {
-    return instance.get('/api/chats');
+    return await instance.get('/chats');
   },
 };

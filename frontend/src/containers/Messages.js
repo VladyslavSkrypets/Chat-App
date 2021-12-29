@@ -27,6 +27,7 @@ const Dialogs = ({
 
   useEffect(() => {
     if (currentDialogId) {
+      console.log("messages dialog_id = ", currentDialogId)
       fetchMessages(currentDialogId);
     }
     socket.on('incoming-msg', onNewMessage);
@@ -45,7 +46,7 @@ const Dialogs = ({
       blockRef={messagesRef}
       items={items}
       isLoading={isLoading && !user}
-      currentDialog={dialogs.items.find((c) => c.room === currentDialogId)}
+      currentDialog={dialogs.items.find((c) => c.room_id === currentDialogId)}
       repliedMessage={repliedMessage}
       onReplyMessage={(message) => {
         setRepliedMessageId(message?.messagesUUID ?? null);

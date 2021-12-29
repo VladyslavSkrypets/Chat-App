@@ -16,6 +16,8 @@ const Messages = ({
   repliedMessage,
   onReplyMessage,
 }) => {
+
+  console.log("current dialog = ", currentDialog)
   return (
     <div
       ref={blockRef}

@@ -34,7 +34,7 @@ const Dialogs = ({
         .map((item) => (
           <DialogItem
             onSelect={onSelectDialog}
-            key={item.room}
+            key={item.room_id}
             // isMe={item.user.id === userId}
             userEmail={userEmail}
             currentDialogId={currentDialogId}

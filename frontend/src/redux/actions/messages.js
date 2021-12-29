@@ -30,12 +30,15 @@ const actions = {
     type: 'MESSAGES:SET_IS_LOADING',
     payload: bool,
   }),
-  fetchMessages: (room) => (dispatch, getState) => {
+  fetchMessages: (room_id) => (dispatch, getState) => {
     dispatch(actions.setIsLoading(true));
     const { dialogs } = getState();
+    console.log("dialogs = ", dialogs)
     const { items } = dialogs;
-    const messages = items.find((c) => c.room === room).messages;
-    dispatch({ type: 'MESSAGES:SET_ITEMS', payload: messages });
+    // const messages = items.find((c) => c.room === room).messages;
+    // const messages = messagesApi.getMessages(room_id);
+    messagesApi.getMessages(room_id).then((response) => dispatch({ type: 'MESSAGES:SET_ITEMS', payload: response.data }));
+    // dispatch({ type: 'MESSAGES:SET_ITEMS', payload: [] });
   },
 };
 

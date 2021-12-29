@@ -11,11 +11,11 @@ const ChatInfo = ({
   user,
   setChatMembers,
 }) => {
-  const currentChatObj = items.find((i) => i.room === currentDialogId);
+  const currentChatObj = items.find((i) => i.room_id === currentDialogId);
   const [editMode, setEditMode] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
   const [users, setUsers] = useState([]);
-  const [name, setName] = useState(currentChatObj.chatName);
+  const [name, setName] = useState(currentChatObj.room_id);
   const [value, setValue] = useState('');
 
   useEffect(() => {
@@ -81,7 +81,7 @@ const ChatInfo = ({
       chatName={name}
       onAddFile={onAddFile}
       changeChatPhoto={changeChatPhoto}
-      isMe={user.email === currentChatObj.ownerEmail}
+      isMe={user.user_id === currentChatObj.creator_id}
       value={value}
       onChangeValue={onSearch}
       users={users}

@@ -11,10 +11,11 @@ const Status = ({ currentDialogId, user, dialogs, setCurrentDialogId }) => {
   if (!dialogs.length || !currentDialogId) {
     return null;
   }
+  console.log(dialogs)
   const currentDialogObj = dialogs.find(
-    (dialog) => dialog.room === currentDialogId,
+    (dialog) => dialog.room_id === currentDialogId,
   );
-  console.log(user);
+  console.log(currentDialogId)
   const toggleShowModal = () => {
     console.log(showModal);
     setShowModal(!showModal);
@@ -23,6 +24,7 @@ const Status = ({ currentDialogId, user, dialogs, setCurrentDialogId }) => {
     history.push('/');
     setCurrentDialogId('');
   }
+  console.log(currentDialogObj)
   if (true)
     return (
       <>
@@ -37,7 +39,7 @@ const Status = ({ currentDialogId, user, dialogs, setCurrentDialogId }) => {
         <BaseStatus
           // online={false}
           onClick={toggleShowModal}
-          fullname={currentDialogObj.chatName}
+          fullname={currentDialogObj.name}
         />
       </>
     );
@@ -65,7 +67,7 @@ const Status = ({ currentDialogId, user, dialogs, setCurrentDialogId }) => {
 export default connect(
   ({ dialogs, user }) => ({
     dialogs: dialogs.items,
-    currentDialogId: dialogs.currentDialogId,
+    currentDialogId: dialogs.room_id,
     user: user.data,
   }),
   dialogsActions,

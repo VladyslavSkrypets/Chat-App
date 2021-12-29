@@ -12,9 +12,9 @@ const actions = {
     type: 'DIALOGS:SET_ITEMS',
     payload: items,
   }),
-  setCurrentDialogId: (id) => ({
+  setCurrentDialogId: (room_id) => ({
     type: 'DIALOGS:SET_CURRENT_DIALOG_ID',
-    payload: id,
+    payload: room_id,
   }),
   setRepliedMessageId: (repliedMessageID) => ({
     type: 'DIALOGS:SET_REPLIED_MESSAGE_ID',

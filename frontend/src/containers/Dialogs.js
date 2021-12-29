@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { dialogsActions } from '../redux/actions';
+import { chatsApi } from '../utils/api';
 import socket from '../core/socket';
 
 import { Dialogs as BaseDialogs } from '../components';
@@ -25,7 +26,7 @@ const Dialogs = ({
     setFiltredItems(
       items.filter(
         (dialog) =>
-          dialog.chatName.toLowerCase().indexOf(value.toLowerCase()) >= 0,
+          dialog.name.toLowerCase().indexOf(value.toLowerCase()) >= 0,
       ),
     );
     setValue(value);
@@ -51,12 +52,11 @@ const Dialogs = ({
       filt.splice(index, 1);
       setFiltredItems(filt);
     });
-    socket.on('CONNECT', (res) => setDialogs(res.chats));
+    chatsApi.getAll().then(({data}) => setDialogs(data.chats ? data.chats : []));
     socket.on('add_message', (res) => addMessageToDialog(res));
     socket.on('UPDATE_CHAT_PHOTO', (res) => changeDialogPhoto(res));
     return () => {
       socket.off('room-create');
-      socket.off('CONNECT');
       socket.off('incoming-msg');
     };
   }, []);
