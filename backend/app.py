@@ -74,7 +74,7 @@ def load_user(id_: uuid.UUID = uuid.uuid4()):
     return User.query.get(id_)
 
 
-@socketio.on('connected')
+@socketio.on('connect')
 def connected():
     current_user.session_id = request.sid
     db.session.commit()
@@ -335,7 +335,7 @@ def delete_room(room_id):
 
 
 @app.route('/rooms/<room_id>/messages')
-@room_member_checker
+# @room_member_checker
 def room_messages(room_id):
     limit = request.args.get('limit', 100)
     offset = request.args.get('offset', 0)
@@ -373,12 +373,25 @@ def room_members(room_id):
 
 @app.route('/chats')
 def get_chats():
-
-    return jsonify(
-        RoomSchema().dump(
-            current_user.rooms, many=True
-        )
+    rooms = (
+        db.session.query(Room.room_id, Room.name, Room.creator_id, room_member)
+        .filter(Room.room_id == room_member.c.room_id).all()
     )
+    total_rooms = RoomSchema().dump(rooms, many=True)
+    for room in total_rooms:
+        members_ids = list(
+            chain(
+                *db.session.query(room_member.c.user_id)
+                .filter(room_member.c.room_id == room['room_id'])
+                .all()
+            )
+        )
+        print(members_ids)
+        room['chatMembers'] = db.session.query(room_member, User).filter(User.user_id == room_member.c.room_id)
+    return jsonify({
+        'chats': RoomSchema().dump(rooms, many=True),
+        'chatMembers': ''
+    })
 
 
 @app.route('/curr_user')
