@@ -99,8 +99,11 @@ def get_user_data():
     }
 
     if not bool(user):
-        db.session.add(User(**user_data))
+        user = User(**user_data)
+        db.session.add(user)
         db.session.commit()
+
+    login_user(user)
 
     return user_data
 
