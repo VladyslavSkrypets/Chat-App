@@ -3,17 +3,9 @@ import { generateAvatarFromHash } from '../../utils/helpers';
 import './Avatar.scss';
 
 const Avatar = ({ user }) => {
-  if (user.photo) {
-    return (
-      <img
-        className="avatar"
-        src={`http://localhost:3001/api/chats/${user.photo}`}
-        alt={`Avatar ${user.name}`}
-      />
-    );
-  } else {
-    const { color, colorLighten } = generateAvatarFromHash('22222222-2222-2222-2222-222222222222');
-    const firstChar = user.name[0].toUpperCase();
+  console.log('USER = ', user['name'])
+  const { color, colorLighten } = generateAvatarFromHash('22222222-2222-2222-2222-222222222222');
+    const firstChar = user.name ? user.name[0].toUpperCase() : ' '
     return (
       <div
         style={{
@@ -24,7 +16,6 @@ const Avatar = ({ user }) => {
         {firstChar}
       </div>
     );
-  }
 };
 
 export default Avatar;

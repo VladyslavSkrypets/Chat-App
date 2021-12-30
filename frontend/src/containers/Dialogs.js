@@ -21,6 +21,7 @@ const Dialogs = ({
   const [inputValue, setValue] = useState('');
   const [filtred, setFiltredItems] = useState(items);
 
+  console.log("DEFORE ITEMS = ", items)
   const history = useHistory();
   const onChangeInput = (value = '') => {
     setFiltredItems(
@@ -52,7 +53,7 @@ const Dialogs = ({
       filt.splice(index, 1);
       setFiltredItems(filt);
     });
-    chatsApi.getAll().then(({data}) => setDialogs(data.chats ? data.chats : []));
+    chatsApi.getAll().then(({data}) => setDialogs(data.chats));
     socket.on('add_message', (res) => addMessageToDialog(res));
     socket.on('UPDATE_CHAT_PHOTO', (res) => changeDialogPhoto(res));
     return () => {
@@ -60,6 +61,8 @@ const Dialogs = ({
       socket.off('incoming-msg');
     };
   }, []);
+
+  console.log(filtred)
 
   return (
     <BaseDialogs

@@ -17,7 +17,7 @@ const Messages = ({
   onReplyMessage,
 }) => {
 
-  console.log("current dialog = ", currentDialog)
+  console.log("current itmes = ", items)
   return (
     <div
       ref={blockRef}
@@ -29,8 +29,10 @@ const Messages = ({
         items.length > 0 ? (
           items.map((item) => {
             const sender = currentDialog.chatMembers.find(
-              (cm) => item.userEmail == cm.email,
+              (cm) => item.user_id == cm.user_id,
             );
+
+            console.log('sender = ', sender);
 
             return (
               <>
@@ -45,7 +47,7 @@ const Messages = ({
                   />
                 ) : null}
                 <Message
-                  key={item.messagesUUID}
+                  key={item.message_id}
                   {...item}
                   isMe={user.email == sender.email}
                   user={sender}

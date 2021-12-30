@@ -23,15 +23,8 @@ const Dialogs = ({
         value={inputValue}
       />
     </div>
-    {items.length ? (
-      items
-        .sort((a, b) =>
-          a.messages.length && b.messages.length
-            ? Number(new Date(b.messages[b.messages.length - 1].date)) -
-              Number(new Date(a.messages[a.messages.length - 1].date))
-            : 0,
-        )
-        .map((item) => (
+    {items?.length ? (
+      items.map((item) => (
           <DialogItem
             onSelect={onSelectDialog}
             key={item.room_id}

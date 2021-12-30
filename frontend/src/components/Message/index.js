@@ -9,7 +9,7 @@ import { Time, Avatar } from '../';
 import './Message.scss';
 import { set } from 'date-fns';
 
-const Message = ({ user, text, date, isMe, replyMessage, replied = false }) => {
+const Message = ({ user, message_text, sent_at, isMe, replyMessage, replied = false }) => {
   return (
     <div
       className={classNames(
@@ -26,12 +26,12 @@ const Message = ({ user, text, date, isMe, replyMessage, replied = false }) => {
         <div className="message__info">
           <div className="message__bubble">
             <p className="message__text">
-              {reactStringReplace(text, /:(.+?):/g, (match, i) => (
+              {reactStringReplace(message_text, /:(.+?):/g, (match, i) => (
                 <Emoji emoji={match} set="apple" size={16} />
               ))}
             </p>
           </div>
-          <span className="message__date">{<Time date={date} />}</span>
+          <span className="message__date">{<Time date={sent_at} />}</span>
         </div>
       </div>
     </div>
