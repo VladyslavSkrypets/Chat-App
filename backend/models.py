@@ -61,7 +61,7 @@ class Messages(db.Model):
     room_member_id = db.Column(db.Integer, db.ForeignKey('room_members.id'),
                                nullable=False)
     message_text = db.Column(db.TEXT, nullable=False)
-    send_at = db.Column(db.DateTime, nullable=False)
+    sent_at = db.Column(db.DateTime, nullable=False)
     is_reply_to = db.Column(
         UUID_FIELD, db.ForeignKey('messages.message_id'),
         nullable=True

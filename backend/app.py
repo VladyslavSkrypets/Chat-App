@@ -347,7 +347,7 @@ def room_messages(room_id):
     all_msgs = (
         Messages.query
         .filter(Messages.room_member_id.in_(room_member_ids))
-        .order_by(Messages.send_at.desc())
+        .order_by(Messages.sent_at.desc())
         .limit(limit)
         .offset(offset)
     )
@@ -375,9 +375,11 @@ def room_members(room_id):
 def get_chats():
     rooms = (
         db.session.query(Room.room_id, Room.name, Room.creator_id, room_member)
-        .filter(Room.room_id == room_member.c.room_id).all()
+        .join(room_member, Room.room_id == room_member.c.room_id)
+        .filter(room_member.c.user_id == current_user.user_id).all()
     )
-    total_rooms = RoomSchema().dump(rooms, many=True)
+    print("rooms = ", set(rooms))
+    total_rooms = RoomSchema().dump(set(rooms), many=True)
     for room in total_rooms:
         members_ids = list(
             chain(
@@ -387,10 +389,10 @@ def get_chats():
             )
         )
         print(members_ids)
-        room['chatMembers'] = db.session.query(room_member, User).filter(User.user_id == room_member.c.room_id)
+        members_data = db.session.query(User).filter(User.user_id.in_(members_ids)).all()
+        room['chatMembers'] = UserSchema().dump(members_data, many=True)
     return jsonify({
-        'chats': RoomSchema().dump(rooms, many=True),
-        'chatMembers': ''
+        'chats': total_rooms
     })
 
 
