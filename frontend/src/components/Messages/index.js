@@ -17,7 +17,6 @@ const Messages = ({
   onReplyMessage,
 }) => {
 
-  console.log("current itmes = ", items)
   return (
     <div
       ref={blockRef}

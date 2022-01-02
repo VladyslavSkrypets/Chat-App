@@ -1,4 +1,3 @@
-// import { chatsApi } from '../../utils/api';
 const splitWithChat = (getState, room = null) => {
   const { dialogs } = getState();
   if (!room) room = dialogs.currentDialogId;
@@ -26,6 +25,8 @@ const actions = {
   }),
   addMessageToDialog: (message) => (dispatch, getState) => {
     const { chats, chat } = splitWithChat(getState);
+    console.log("CHATS", chat);
+    console.log("CHAT", chat);
     let messages = [...chat.messages];
     messages.push(message);
     if (messages.length > 100) messages = messages.splice(1);

@@ -69,11 +69,8 @@ const Dialogs = ({
     console.log(JSON.parse(localStorage.getItem('user')));
     history.replace('/');
 
-    // console.log("GETTING CHATS")
-    // socket.emit('get-chats')
-    // socket.on('user:chats', (data) => setDialogs(data.chats))
-    // chatsApi.getAll().then(({data}) => setDialogs(data.chats));
     socket.on('add_message', (res) => addMessageToDialog(res));
+    // socket.on('add_message', (res) => console.log(res));
     socket.on('UPDATE_CHAT_PHOTO', (res) => changeDialogPhoto(res));
     return () => {
       socket.off('room-create');
