@@ -46,7 +46,7 @@ class Room(db.Model):
                             name='room_name_creator_id_uq'),
     )
 
-    room_id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String, nullable=False)
     creator_id = db.Column(UUID_FIELD, db.ForeignKey('users.user_id'),
                            nullable=False)
