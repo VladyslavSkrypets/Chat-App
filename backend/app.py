@@ -105,13 +105,16 @@ def on_message(data):
 
     msg = data['msg']
     username = data['username']
-    room = data['room']
-    user_id = User.query.filter_by(username=username).first().user_id
+    room_id = data['room']
+    print(data)
+    user = User.query.filter_by(username=username).first()
     reply_to_id = data['reply_to_id']
     # Set timestamp
     sent_ts = datetime.datetime.utcnow()
     time_stamp = datetime.datetime.strftime(sent_ts, '%b-%d %I:%M%p')
-    msg_id = save_message(user_id, room, sent_ts, msg, reply_to_id)
+    msg_id = save_message(user.user_id, room_id, sent_ts, msg, reply_to_id)
+
+    room_name = Room.query.filter(Room.room_id == room_id).first().name
 
     emit('add_message', {
         'username': username,
@@ -120,21 +123,16 @@ def on_message(data):
             'id': str(msg_id)
         },
         'time': time_stamp,
-        'room': room
-    }, room=room
-    )
+        'room': room_name
+    }, sid=room_name)
 
 
 @socketio.on('join')
 def on_join(data):
     """User joins a room"""
 
-    username = data["username"]
-    room = data["room"]
-
-    join_room(room)
-    # Broadcast that new user has joined
-    send({"msg": {'text':  username + " has joined the " + room + " room."}}, room=room)
+    room_name = db.session.query(Room.name).filter(Room.room_id == data['dialog_id'])
+    join_room(room_name)
 
 
 @socketio.on('leave')

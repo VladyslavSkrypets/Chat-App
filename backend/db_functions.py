@@ -26,16 +26,18 @@ def remove_room_members(room_id: int, creator_id: int, members: Iterable[str]):
     pass
 
 
-def save_message(user_id: uuid.uuid4(), room_name: str, sent_at: datetime.datetime,
+def save_message(user_id: uuid.uuid4(), room_id: str, sent_at: datetime.datetime,
                  msg_text: str, reply_to_id: uuid.UUID) -> uuid.UUID:
-    print(room_name)
-    room_id = Room.query.filter_by(name=room_name).first().room_id
 
     room_member_id = db.session.query(room_member).filter_by(
         room_id=room_id, user_id=user_id
     ).first().id
-
-    new_msg = Messages(room_member_id, sent_at, msg_text, reply_to_id)
+    new_msg = Messages(**{
+        'room_member_id': room_member_id,
+        'sent_at': sent_at,
+        'message_text': msg_text,
+        'is_reply_to': reply_to_id
+    })
     db.session.add(new_msg)
     db.session.commit()
 
