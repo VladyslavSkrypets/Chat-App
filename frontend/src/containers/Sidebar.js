@@ -22,7 +22,7 @@ const SidebarContainer = ({ user }) => {
   const onSearch = async (value) => {
     setIsLoading(true);
     const { data } = await userApi.findUsersByNickname(value);
-    console.log(data)
+    console.log("SERACH DATA = ", data)
     if (data.length) {
       const index = data.findIndex((u) => u.email == user.email);
       if (index !== -1) data.splice(index, 1);
@@ -38,15 +38,13 @@ const SidebarContainer = ({ user }) => {
   const onAddDialog = () => {
     const usersData = users.filter((us) => us.checked).map((us) => {return {'user_id': us.user_id}});
 
-    socket
-      .emit('ADD_CHAT', {
-        room_name: chatName || 'NewChat',
-        users: [...usersData, user.user_id],
+    console.log('add users to chat', usersData);
+
+    socket.emit('room-create', {
+        room_name: chatName,
+        members: [...usersData],
+        creator_id: user.user_id
       })
-      .then((res) => {
-        if (res.ok) onClose();
-        else setIsLoading(false);
-      });
   };
 
   const handleChangeInput = async (value) => {
