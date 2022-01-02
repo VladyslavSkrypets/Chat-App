@@ -1,6 +1,6 @@
 import { openNotification } from '../../utils/helpers';
 import { userApi } from '../../utils/api';
-
+import { socket } from '../../core'
 import _getFingerprint from '../../utils/helpers/fingerprint';
 
 const actions = {
@@ -12,18 +12,14 @@ const actions = {
     type: 'USER:SET_IS_AUTH',
     payload: bool,
   }),
-  fetchUserData: () => (dispatch) => {
-    userApi
-      .getMe()
-      .then(({ data }) => {
-        dispatch(actions.setUserData(data));
-      })
-      .catch((err) => {
-        if (err.response.status === 403) {
-          dispatch(actions.setIsAuth(false));
-          delete window.localStorage.accessToken;
-        }
-      });
+  fetchUserData: (userData) => (dispatch) => {
+    if (localStorage.getItem('user')?.length) {
+      dispatch(actions.setUserData(JSON.parse(localStorage.getItem('user'))))
+    } 
+    else {
+      dispatch(actions.setUserData(userData));
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
   },
   fetchUserLogin: (postData) => async (dispatch) => {
     try {

@@ -26,9 +26,9 @@ const Messages = ({
       {isLoading ? (
         <Spin size="large" tip="Загрузка сообщений..."></Spin>
       ) : items && !isLoading ? (
-        items.length > 0 ? (
+        items?.length > 0 ? (
           items.map((item) => {
-            const sender = currentDialog.chatMembers.find(
+            const sender = currentDialog?.chatMembers.find(
               (cm) => item.user_id == cm.user_id,
             );
 
@@ -38,9 +38,9 @@ const Messages = ({
               <>
                 {item.repliedMessage ? (
                   <Message
-                    key={'' + item.repliedMessage.messagesUUID}
+                    key={'reply-message' + item.repliedMessage.message_id}
                     {...item.repliedMessage}
-                    isMe={user.email == sender.email}
+                    isMe={user?.email == sender?.email}
                     user={sender}
                     replied
                     replyMessage={() => {}}
@@ -49,7 +49,7 @@ const Messages = ({
                 <Message
                   key={item.message_id}
                   {...item}
-                  isMe={user.email == sender.email}
+                  isMe={user?.email == sender?.email}
                   user={sender}
                   replyMessage={() => onReplyMessage(item)}
                 />
@@ -70,16 +70,16 @@ const Messages = ({
       )}
       {repliedMessage ? (
         <Message
-          key={'rep-' + repliedMessage.messagesUUID}
+          key={'rep-' + repliedMessage.message_id}
           {...repliedMessage}
           isMe={
             user?.email ==
             currentDialog.chatMembers.find(
-              (cm) => repliedMessage.userEmail == cm.email,
+              (cm) => repliedMessage?.email == cm?.email,
             ).email
           }
           user={currentDialog.chatMembers.find(
-            (cm) => repliedMessage.userEmail == cm.email,
+            (cm) => repliedMessage?.email == cm?.email,
           )}
           replied
           replyMessage={() => onReplyMessage(null)}

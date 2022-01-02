@@ -74,6 +74,7 @@ const Sidebar = ({
               autoSize={{ minRows: 3, maxRows: 10 }}
               onChange={onChangeTextArea}
               value={chatName}
+              required
             />
           </Form.Item>
           {/*)}*/}

@@ -6,7 +6,7 @@ const UserOptions = ({ users, onSelectUser }) => {
       {users.length
         ? users.map((us) => (
             <div className={'userOption'} key={us.email}>
-              <div>{us.name} </div>
+              <div>{us.username} </div>
               <div>
                 <input
                   type={'checkbox'}
