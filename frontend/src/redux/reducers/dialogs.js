@@ -1,3 +1,5 @@
+import { socket } from "../../core";
+
 const initialState = {
   items: [],
   currentDialogId: window.location.pathname.split('dialog/')[1],
@@ -13,6 +15,8 @@ export default (state = initialState, { type, payload }) => {
         items: payload,
       };
     case 'DIALOGS:SET_CURRENT_DIALOG_ID':
+      const user = JSON.parse(localStorage.getItem('user'));
+      socket.emit('join', {'user': user, 'dialog_id': payload});
       return {
         ...state,
         currentDialogId: payload,
