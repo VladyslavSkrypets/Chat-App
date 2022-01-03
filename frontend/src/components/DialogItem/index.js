@@ -17,7 +17,6 @@ const DialogItem = ({
   room_id,
   last_message,
   chatMembers,
-  message_text,
   unread,
   isGroup,
   chatName,
@@ -44,16 +43,12 @@ const DialogItem = ({
         <div className="dialogs__item-info-top">
           <b>{name}</b>
           <span>
-            {last_message.length
-              ? last_message.sent_at
-              : null}
+            {last_message.sent_at}
           </span>
         </div>
         <div className="dialogs__item-info-bottom">
           <p>
-            {message_text
-              ? message_text
-              : null}
+            {last_message.message_text}
           </p>
           {<IconReaded isMe={true} isReaded={true} />}
           {unread > 0 && (
