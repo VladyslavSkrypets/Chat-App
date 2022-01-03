@@ -31,6 +31,7 @@ def room_admin_checker(function):
             return function(data)
         abort(403, description="You have to be a room admin "
                                "to edit/delete the room")
+
     return wrapper
 
 
@@ -42,6 +43,7 @@ def room_member_checker(function):
             return function(room_id)
         abort(403, description="You have to be a room member "
                                "to fetch the members list")
+
     return wrapper
 
 
@@ -82,6 +84,7 @@ def connected(token):
         'chats': get_chats(user_id)
     }, to=session_id)
 
+
 #
 # @socketio.on('disconnect')
 # def disconnect():
@@ -102,37 +105,46 @@ def destroy_session():
 
 @socketio.on('incoming-msg')
 def on_message(data):
-
+    print("MESSAGE DATA = ", data)
+    response = {}
     msg = data['msg']
-    username = data['username']
+    user_id = data['user_id']
     room_id = data['room']
-    print(data)
-    user = User.query.filter_by(username=username).first()
     reply_to_id = data['reply_to_id']
     # Set timestamp
     sent_ts = datetime.datetime.utcnow()
-    time_stamp = datetime.datetime.strftime(sent_ts, '%b-%d %I:%M%p')
-    msg_id = save_message(user.user_id, room_id, sent_ts, msg, reply_to_id)
-
+    new_message = save_message(user_id, room_id, sent_ts, msg, reply_to_id)
     room_name = Room.query.filter(Room.room_id == room_id).first().name
-
-    emit('add_message', {
-        'username': username,
-        'msg': {
-            'text': msg,
-            'id': str(msg_id)
-        },
-        'time': time_stamp,
-        'room': room_name
-    }, sid=room_name)
+    if reply_to_id:
+        replied_message = Messages.query.filter(Messages.message_id == reply_to_id).first()
+        response.update({
+            'room_id': room_id,
+            'user_id': user_id,
+            'repliedMessage': {
+                'room_id': room_id,
+                'user_id': user_id,
+                **MessageSchema().dump(replied_message)
+            },
+            **MessageSchema().dump(new_message)
+        })
+    else:
+        response.update({
+            'room_id': room_id,
+            'user_id': user_id,
+            **MessageSchema().dump(new_message)
+        })
+    emit('add_message', response, to=room_name)
 
 
 @socketio.on('join')
 def on_join(data):
     """User joins a room"""
-
-    room_name = db.session.query(Room.name).filter(Room.room_id == data['dialog_id'])
-    join_room(room_name)
+    print("JOINING USER TO ROOM", data)
+    room_id = data['dialog_id']
+    if room_id:
+        room_name, = db.session.query(Room.name).filter(Room.room_id == data['dialog_id']).first()
+        print(f'joined to = {room_name}')
+        join_room(room_name)
 
 
 @socketio.on('leave')
@@ -142,7 +154,7 @@ def on_leave(data):
     username = data['username']
     room = data['room']
     leave_room(room)
-    send({"msg": {'text':  username + " has left the " + room + " room."}}, room=room)
+    send({"msg": {'text': username + " has left the " + room + " room."}}, room=room)
 
 
 @app.route('/rooms/list')
@@ -178,6 +190,7 @@ def create_room(data):
                 'name': room_name,
                 'room_id': room_id,
                 'creator_id': creator_id,
+                # 'last_message': {},
                 'chatMembers': get_room_members(room_id)
             }, to=sid)
 
@@ -221,7 +234,8 @@ def edit_room(data):
 
     add_members = [('add', *data) for data in get_users_sessions(new_members - old_members)]
     remove_members = [('remove', *data) for data in get_users_sessions(old_members - new_members)]
-    not_changed_members = [('skip', *data) for data in get_users_sessions(new_members & old_members)]
+    not_changed_members = [('skip', *data) for data in
+                           get_users_sessions(new_members & old_members)]
 
     for action_type, user_id, sid in add_members + remove_members + not_changed_members:
         if action_type == 'add':
@@ -229,7 +243,9 @@ def edit_room(data):
             if sid:
                 try:
                     join_room(sid=sid, room=new_room_name)
-                    emit('room-created', {'message': f'You {sid} have been added to the chat', 'status': 201}, to=sid)
+                    emit('room-created',
+                         {'message': f'You {sid} have been added to the chat', 'status': 201},
+                         to=sid)
                 except Exception as e:
                     print(e)
                     set_null_session()
@@ -251,7 +267,9 @@ def edit_room(data):
             if sid:
                 try:
                     leave_room(sid=sid, room=old_room_name)
-                    emit('room-created', {'message': f'You {sid} have been deleted to the chat', 'status': 201}, to=sid)
+                    emit('room-created',
+                         {'message': f'You {sid} have been deleted to the chat', 'status': 201},
+                         to=sid)
                 except Exception as e:
                     print(e)
                     set_null_session()
@@ -274,9 +292,6 @@ def delete_room(room_id):
 @app.route('/rooms/<room_id>/messages')
 # @room_member_checker
 def room_messages(room_id):
-    limit = request.args.get('limit', 100)
-    offset = request.args.get('offset', 0)
-
     room_member_ids = (
         rm.id for rm in
         get_room_members_by_room_id(room_id)
@@ -284,18 +299,27 @@ def room_messages(room_id):
     all_msgs = (
         Messages.query
         .filter(Messages.room_member_id.in_(room_member_ids))
-        .order_by(Messages.sent_at.desc())
-        .limit(limit)
-        .offset(offset)
+        .order_by(Messages.sent_at.asc())
     )
 
-    return jsonify([
+    all_msgs = [
         {
             'user_id': get_uid_by_room_member_id(msg.room_member_id),
             **MessageSchema().dump(msg)
         }
         for msg in all_msgs
-    ])
+    ]
+
+    for message in all_msgs:
+        if message['is_reply_to']:
+            replied_message = Messages.query.filter(Messages.message_id == message['is_reply_to']).first()
+            message['repliedMessage'] = {
+                'room_id': room_id,
+                'user_id': get_uid_by_room_member_id(message['room_member_id']),
+                **MessageSchema().dump(replied_message)
+            }
+
+    return jsonify(all_msgs)
 
 
 @app.route('/rooms/<room_id>/members')

@@ -1,5 +1,5 @@
 from itertools import chain
-from schemas import RoomSchema, UserSchema
+from schemas import RoomSchema, UserSchema, MessageSchema
 from models import *
 from typing import Iterable, List, Set
 
@@ -41,7 +41,7 @@ def save_message(user_id: uuid.uuid4(), room_id: str, sent_at: datetime.datetime
     db.session.add(new_msg)
     db.session.commit()
 
-    return new_msg.message_id
+    return new_msg
 
 
 def delete_message(msg_id):
@@ -89,12 +89,22 @@ def get_chats(user_id: UUID):
     )
     total_rooms = RoomSchema().dump(set(rooms), many=True)
     for room in total_rooms:
+        members = (
+            db.session.query(room_member.c.id).filter(room_member.c.room_id == room['room_id']).all()
+        )
+        members = chain(*members) if members else []
+        last_message = db.session.query(
+            Messages.room_member_id, Messages.message_text,
+            Messages.message_id, Messages.is_reply_to, Messages.sent_at
+        ).order_by(Messages.sent_at.desc()).filter(Messages.room_member_id.in_(members)).first()
+
         room['chatMembers'] = get_room_members(room['room_id'])
+        room['last_message'] = MessageSchema().dump(last_message)
 
     return total_rooms
 
 
-def get_room_members(room_id: int) :
+def get_room_members(room_id: int):
     members_ids = list(
         chain(
             *db.session.query(room_member.c.user_id)
