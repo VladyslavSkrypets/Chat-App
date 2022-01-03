@@ -43,12 +43,12 @@ const DialogItem = ({
         <div className="dialogs__item-info-top">
           <b>{name}</b>
           <span>
-            {last_message.sent_at}
+            {last_message?.sent_at}
           </span>
         </div>
         <div className="dialogs__item-info-bottom">
           <p>
-            {last_message.message_text}
+            {last_message?.message_text}
           </p>
           {<IconReaded isMe={true} isReaded={true} />}
           {unread > 0 && (
