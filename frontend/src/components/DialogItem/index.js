@@ -15,8 +15,9 @@ const getMessageTime = (createdAt) => {
 const DialogItem = ({
   name,
   room_id,
-  messages,
+  last_message,
   chatMembers,
+  message_text,
   unread,
   isGroup,
   chatName,
@@ -29,7 +30,6 @@ const DialogItem = ({
     <div
       className={classNames('dialogs__item', {
         'dialogs__item--online': false,
-        // user.isOnline,
         'dialogs__item--selected': currentDialogId === room_id,
       })}
       onClick={() => onSelect(room_id)}
@@ -44,18 +44,17 @@ const DialogItem = ({
         <div className="dialogs__item-info-top">
           <b>{name}</b>
           <span>
-            {/* {messages.length
-              ? getMessageTime(messages[messages.length - 1].date)
-              : null} */}
+            {last_message.length
+              ? last_message.sent_at
+              : null}
           </span>
         </div>
         <div className="dialogs__item-info-bottom">
-          {/* <p>
-            {messages.length
-              ? messages[messages.length - 1].text ??
-                messages[messages.length - 1].photo
+          <p>
+            {message_text
+              ? message_text
               : null}
-          </p> */}
+          </p>
           {<IconReaded isMe={true} isReaded={true} />}
           {unread > 0 && (
             <div className="dialogs__item-info-bottom-count">

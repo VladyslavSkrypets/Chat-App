@@ -44,9 +44,8 @@ const Dialogs = ({
 
   useEffect(() => {
     socket.on('add_chat', (res) => {
-      console.log(res);
+      console.log("CREATED CHAT DATA = ", res);
       addDialog(res);
-      setFiltredItems([...filtred, res]);
     });
     socket.on('remove_chat', (res) => {
       removeDialog(res);
@@ -69,8 +68,8 @@ const Dialogs = ({
     console.log(JSON.parse(localStorage.getItem('user')));
     history.replace('/');
 
-    socket.on('add_message', (res) => addMessageToDialog(res));
-    // socket.on('add_message', (res) => console.log(res));
+    // socket.on('add_message', (res) => addMessageToDialog(res));
+    socket.on('add_message', (res) => console.log(res));
     socket.on('UPDATE_CHAT_PHOTO', (res) => changeDialogPhoto(res));
     return () => {
       socket.off('room-create');
@@ -78,7 +77,7 @@ const Dialogs = ({
       socket.off('user:chats');
     };
   }, []);
-
+  console.log("DIALOGS = ", filtred)
   return (
     <BaseDialogs
       userEmail={userEmail}

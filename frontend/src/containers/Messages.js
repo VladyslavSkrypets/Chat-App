@@ -22,6 +22,7 @@ const Dialogs = ({
   const messagesRef = useRef(null);
 
   const onNewMessage = (data) => {
+    console.log("ON NEW MESSAGE", data);
     addMessage(data);
   };
 
@@ -30,8 +31,8 @@ const Dialogs = ({
       console.log("messages dialog_id = ", currentDialogId)
       fetchMessages(currentDialogId);
     }
-    socket.on('incoming-msg', onNewMessage);
-    return () => socket.off('incoming-msg');
+    socket.on('add_message', onNewMessage);
+    return () => socket.off('add_message');
   }, [currentDialogId]);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ const Dialogs = ({
       currentDialog={dialogs.items.find((c) => c.room_id === currentDialogId)}
       repliedMessage={repliedMessage}
       onReplyMessage={(message) => {
-        setRepliedMessageId(message?.messagesUUID ?? null);
+        setRepliedMessageId(message?.message_id ?? null);
         setRepliedMessage(message);
       }}
     />

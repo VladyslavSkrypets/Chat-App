@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Empty, Spin } from 'antd';
+import { Empty, message, Spin } from 'antd';
 import classNames from 'classnames';
 
 import { Message } from '../';
@@ -16,7 +16,9 @@ const Messages = ({
   repliedMessage,
   onReplyMessage,
 }) => {
-
+  console.log("MESSAGES = ", items);
+  console.log("CURRENT DIALOG = ", currentDialog);
+  console.log("USER IN MESSAGES = ", user)
   return (
     <div
       ref={blockRef}
@@ -27,6 +29,7 @@ const Messages = ({
       ) : items && !isLoading ? (
         items?.length > 0 ? (
           items.map((item) => {
+            // console.log("TEST = ", currentDialog.chatMembers.find((member) => item.user_id === me))
             const sender = currentDialog?.chatMembers.find(
               (cm) => item.user_id == cm.user_id,
             );
@@ -39,7 +42,7 @@ const Messages = ({
                   <Message
                     key={'reply-message' + item.repliedMessage.message_id}
                     {...item.repliedMessage}
-                    isMe={user?.email == sender?.email}
+                    isMe={user?.user_id == sender?.user_id}
                     user={sender}
                     replied
                     replyMessage={() => {}}
@@ -48,7 +51,7 @@ const Messages = ({
                 <Message
                   key={item.message_id}
                   {...item}
-                  isMe={user?.email == sender?.email}
+                  isMe={user?.user_id == sender?.user_id}
                   user={sender}
                   replyMessage={() => onReplyMessage(item)}
                 />
@@ -72,13 +75,13 @@ const Messages = ({
           key={'rep-' + repliedMessage.message_id}
           {...repliedMessage}
           isMe={
-            user?.email ==
+            user?.user_id ===
             currentDialog.chatMembers.find(
-              (cm) => repliedMessage?.email == cm?.email,
-            ).email
+              (cm) => repliedMessage?.user_id == cm?.user_id,
+            ).user_id
           }
           user={currentDialog.chatMembers.find(
-            (cm) => repliedMessage?.email == cm?.email,
+            (cm) => repliedMessage?.user_id == cm?.user_id,
           )}
           replied
           replyMessage={() => onReplyMessage(null)}
