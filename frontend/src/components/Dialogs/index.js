@@ -26,7 +26,6 @@ const Dialogs = ({
           <DialogItem
             onSelect={onSelectDialog}
             key={item.room_id}
-            // isMe={item.user.id === userId}
             userEmail={userEmail}
             currentDialogId={currentDialogId}
             {...item}

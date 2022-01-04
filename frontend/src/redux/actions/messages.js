@@ -6,20 +6,15 @@ const actions = {
     payload: items,
   }),
   addMessage: (message) => (dispatch, getState) => {
-    if (!sended) {
-      const { dialogs } = getState();
-      const { currentDialogId } = dialogs;
-      if (currentDialogId === message.room) {
-        dispatch({
-          type: 'MESSAGES:ADD_MESSAGE',
-          payload: message,
-        });
-      }
-      sended = true;
-    } else {
-      setTimeout(() => {
-        sended = false;
-      }, 10);
+    const { dialogs } = getState();
+    const { currentDialogId } = dialogs;
+    console.log("MESSAGE", message)
+    console.log("CUR DIALOG ID", currentDialogId)
+    if (currentDialogId === message.room_id) {
+      dispatch({
+        type: 'MESSAGES:ADD_MESSAGE',
+        payload: message,
+      });
     }
   },
   // eslint-disable-next-line no-unused-vars

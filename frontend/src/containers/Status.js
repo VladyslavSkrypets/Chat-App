@@ -6,25 +6,24 @@ import { ChatInfo } from './index';
 import { useHistory } from 'react-router-dom';
 import { dialogsActions } from '../redux/actions';
 const Status = ({ currentDialogId, user, dialogs, setCurrentDialogId }) => {
+  console.log("IN STATIS")
   const [showModal, setShowModal] = useState(false);
   const history = useHistory();
-  if (!dialogs.length || !currentDialogId) {
-    return null;
-  }
+  // if (!dialogs.length || !currentDialogId) {
+  //   return null;
+  // }
   console.log(dialogs)
   const currentDialogObj = dialogs.find(
     (dialog) => dialog.room_id === currentDialogId,
   );
   console.log(currentDialogId)
   const toggleShowModal = () => {
-    console.log(showModal);
     setShowModal(!showModal);
   };
   if (!currentDialogObj) {
     history.push('/');
     setCurrentDialogId('');
   }
-  console.log(currentDialogObj)
   if (true)
     return (
       <>
@@ -39,7 +38,7 @@ const Status = ({ currentDialogId, user, dialogs, setCurrentDialogId }) => {
         <BaseStatus
           // online={false}
           onClick={toggleShowModal}
-          fullname={currentDialogObj.name}
+          fullname={currentDialogObj?.name}
         />
       </>
     );
