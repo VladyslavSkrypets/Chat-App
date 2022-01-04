@@ -4,7 +4,7 @@ import logging
 from flask import request, abort, jsonify
 from __init__ import app, socketio, login
 from schemas import *
-from flask_login import login_user, current_user, login_required, logout_user
+from flask_login import login_user, current_user
 from flask_socketio import send, emit, join_room, leave_room
 from db_functions import *
 from functools import wraps
@@ -85,13 +85,6 @@ def connected(token):
     }, to=session_id)
 
 
-#
-# @socketio.on('disconnect')
-# def disconnect():
-#     current_user.session_id = None
-#     db.session.commit()
-
-
 def set_null_session():
     current_user.session_id = None
 
@@ -157,13 +150,6 @@ def on_leave(data):
     send({"msg": {'text': username + " has left the " + room + " room."}}, room=room)
 
 
-@app.route('/rooms/list')
-def list_rooms():
-    # TODO: implement logic that allows to list chats
-    # TODO: (ids, names, img_urls etc)
-    pass
-
-
 @socketio.on('room-create')
 def create_room(data):
     try:
@@ -180,8 +166,7 @@ def create_room(data):
             if sid:
                 try:
                     join_room(sid=sid, room=room_name)
-                    """emit to front all users data (user_id, name, email)"""
-                except Exception as e:
+                except:
                     set_null_session()
                     db.session.commit()
 
@@ -190,13 +175,45 @@ def create_room(data):
                 'name': room_name,
                 'room_id': room_id,
                 'creator_id': creator_id,
-                # 'last_message': {},
+                'last_message': {},
                 'chatMembers': get_room_members(room_id)
             }, to=sid)
 
     except Exception as e:
 
         emit('room-create', {'message': e, 'status': 400})
+
+
+@socketio.on('ROOM:REMOVE_USER')
+def remove_user_from_chat(data):
+    user_id, room_id = data['user_id'], data['room_id']
+    members = set(chain(*db.session.query(room_member.c.user_id).filter_by(room_id=room_id).all()))
+    room_member_id, = (
+        db.session.query(room_member.c.id)
+        .filter_by(room_id=room_id)
+        .filter_by(user_id=user_id)
+        .first()
+    )
+    Messages.query.filter(Messages.room_member_id == room_member_id).delete()
+    db.session.query(room_member).filter_by(id=room_member_id).delete()
+    db.session.commit()
+    for user_id, sid in get_users_sessions(members):
+        chats = get_chats(user_id)
+        emit('CHATS:UPDATE', {'chats': chats}, to=sid)
+
+    print("REMOVE USER DATA = ", data)
+
+
+@socketio.on('ROOM:ADD_USER')
+def add_user_to_chat(data_list):
+    print("ADD USER TO CHAT DATA = ", data_list)
+    for data in data_list:
+        user_id, room_id, creator_id = data['user_id'], data['room_id'], data['creator_id']
+        add_room_member(room_id, creator_id, user_id)
+        members = set(chain(*db.session.query(room_member.c.user_id).filter_by(room_id=room_id).all()))
+        for user_id, sid in get_users_sessions(members):
+            chats = get_chats(user_id)
+            emit('CHATS:UPDATE', {'chats': chats}, to=sid)
 
 
 @app.route('/get-user')
@@ -207,86 +224,6 @@ def get_user():
         return jsonify(UserSchema().dump(user, many=True))
 
     return jsonify({'users': []})
-
-
-@socketio.on('room-edit')
-# @room_admin_checker
-def edit_room(data):
-    room_name = data['room_name']
-    creator_id = current_user.user_id
-
-    room = Room.query.filter_by(name=room_name).first()
-    room_id = room.room_id
-
-    old_room_name, new_room_name = room.name, data['room_name']
-
-    if new_room_name != old_room_name:
-        room.name = new_room_name
-        db.session.commit()
-
-    new_members = {user['user_id'] for user in data['members'] if user['user_id']} | {str(creator_id)}
-
-    old_members = set(
-        map(
-            str, chain(*db.session.query(room_member.c.user_id).filter_by(room_id=room_id).all())
-        )
-    )
-
-    add_members = [('add', *data) for data in get_users_sessions(new_members - old_members)]
-    remove_members = [('remove', *data) for data in get_users_sessions(old_members - new_members)]
-    not_changed_members = [('skip', *data) for data in
-                           get_users_sessions(new_members & old_members)]
-
-    for action_type, user_id, sid in add_members + remove_members + not_changed_members:
-        if action_type == 'add':
-            add_room_member(room_id, creator_id, user_id)
-            if sid:
-                try:
-                    join_room(sid=sid, room=new_room_name)
-                    emit('room-created',
-                         {'message': f'You {sid} have been added to the chat', 'status': 201},
-                         to=sid)
-                except Exception as e:
-                    print(e)
-                    set_null_session()
-                    db.session.commit()
-
-        elif action_type == 'remove':
-            room_members = db.session.query(room_member.c.id).filter_by(user_id=user_id)
-            room_messages = (
-                db.session.query(Messages)
-                .filter(Messages.room_member_id.in_(chain(*room_members.all())))
-            )
-            room_messages.delete()
-            (
-                db.session.query(room_member)
-                .filter(room_member.c.user_id == user_id)
-                .filter(room_member.c.room_id == room_id).delete()
-            )
-            db.session.commit()
-            if sid:
-                try:
-                    leave_room(sid=sid, room=old_room_name)
-                    emit('room-created',
-                         {'message': f'You {sid} have been deleted to the chat', 'status': 201},
-                         to=sid)
-                except Exception as e:
-                    print(e)
-                    set_null_session()
-                    db.session.commit()
-
-        else:
-            print('hit skip')
-            leave_room(sid=sid, room=old_room_name)
-            join_room(sid=sid, room=new_room_name)
-            emit('user_re_joined', {'new_room': new_room_name}, to=sid)
-
-
-@socketio.on('room-delete')
-@room_admin_checker
-def delete_room(room_id):
-    remove_room(room_id)
-    emit('remove_chat', {'room_id': room_id})
 
 
 @app.route('/rooms/<room_id>/messages')
@@ -330,18 +267,6 @@ def room_members(room_id):
             Room.query.get(room_id).users, many=True
         )
     )
-
-
-@socketio.on('get-chats')
-def get_user_chats():
-    print('USER IN GETTING CHATS', current_user)
-    chats = get_chats(current_user.user_id)
-    emit('user:chats', {'chats': chats})
-
-
-@app.route('/curr_user')
-def curr_user():
-    return current_user.username
 
 
 if __name__ == '__main__':

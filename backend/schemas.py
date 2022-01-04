@@ -1,4 +1,5 @@
-from marshmallow import Schema, fields
+from datetime import datetime
+from marshmallow import Schema, fields, post_dump
 
 
 class UserSchema(Schema):
@@ -14,6 +15,14 @@ class MessageSchema(Schema):
     message_text = fields.Str()
     sent_at = fields.DateTime()
     is_reply_to = fields.Str()
+
+    @post_dump
+    def prettify_date(self, data, **kwargs):
+        if data:
+            date = datetime.strptime(data['sent_at'], '%Y-%m-%dT%H:%M:%S.%f')
+            data['sent_at'] = format(date, '%H:%M %d.%m.%y')
+
+        return data
 
 
 class RoomSchema(Schema):
