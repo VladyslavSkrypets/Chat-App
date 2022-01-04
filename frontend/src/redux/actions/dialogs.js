@@ -25,13 +25,17 @@ const actions = {
   }),
   addMessageToDialog: (message) => (dispatch, getState) => {
     const { chats, chat } = splitWithChat(getState);
-    console.log("CHATS", chat);
-    console.log("CHAT", chat);
-    let messages = [...chat.messages];
-    messages.push(message);
-    if (messages.length > 100) messages = messages.splice(1);
+    console.log("CHATS = ", chats);
+    console.log("CHAT = ", chat);
+    for (let ch of chats) {
+      console.log(ch);
+      if (ch.room_id === chat.room_id) {
+        console.log("find chat");
+        ch.last_message = message;
+      }
+    }
 
-    dispatch(actions.setDialogs([...chats, { ...chat, messages }]));
+    dispatch(actions.setDialogs([...chats]));
   },
   changeDialogPhoto: ({ photo, room }) => (dispatch, getState) => {
     const { chats, chat } = splitWithChat(getState, room);

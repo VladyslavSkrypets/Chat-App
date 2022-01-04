@@ -3,8 +3,8 @@ import React from 'react';
 import './ChatInfo.scss';
 const ChatInfo = ({
   editMode,
-  room,
-  chatName,
+  room_id,
+  name,
   photo,
   value,
   isMe,
@@ -19,11 +19,16 @@ const ChatInfo = ({
   onChangeValue,
   onToggleEdit,
 }) => {
+
+  console.log("IS ME = ", isMe);
+
   return (
     <div className={'chatInfo'}>
       {isMe ? <Button onClick={onToggleEdit}>Edit</Button> : null}
-      <Avatar user={{ photo, name: chatName, uuid: room }} />
-      {editMode ? (
+      <div style={{width: '100px', height: '100px', margin: 'auto', marginTop: '15px'}}>
+        <Avatar user={{ photo, name: name, uuid: room_id }} />
+      </div>
+      {/* {editMode ? (
         <div className={'fileUpload'}>
           <label htmlFor="file">Choose images to upload (PNG, JPG)</label>
           <input
@@ -33,27 +38,16 @@ const ChatInfo = ({
           />
           <Button onClick={changeChatPhoto}>Submit</Button>
         </div>
-      ) : null}
-      {/*{editMode ? (*/}
-      {/*  <>*/}
-      {/*    <label htmlFor="chatName">Input new member email:</label>*/}
-      {/*    <input*/}
-      {/*      id={'chatName'}*/}
-      {/*      onChange={({ target }) => onNameChange(target.value)}*/}
-      {/*      value={chatName}*/}
-      {/*    />*/}
-      {/*  </>*/}
-      {/*) : (*/}
-      <div className={'chatName'}>{chatName}</div>
-      {/*)}*/}
+      ) : null} */}
+      <div className={'chatName'}>{name}</div>
       {chatMembers.map((cm) => (
         <div key={cm.email} className={'chatMember'}>
-          <div>{cm.name}</div>
+          <div>{cm.username}</div>
           {editMode ? (
             <div>
               <Button
                 onClick={() => {
-                  onMemberRemove(cm.email);
+                  onMemberRemove(cm.user_id);
                 }}
               >
                 Remove

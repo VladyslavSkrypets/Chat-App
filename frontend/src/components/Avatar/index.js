@@ -3,9 +3,12 @@ import { generateAvatarFromHash } from '../../utils/helpers';
 import './Avatar.scss';
 
 const Avatar = ({ user }) => {
-  console.log('USER = ', user['username'])
-  const { color, colorLighten } = generateAvatarFromHash('22222222-2222-2222-2222-222222222222');
-    const firstChar = user.username ? user.username[0].toUpperCase() : ' '
+  console.log("AVATAR USER = ", user);
+  if (!user.name && !user.username) {
+    user.name = '#'
+  }
+  const { color, colorLighten } = generateAvatarFromHash(user?.name ? user?.name : user?.username);
+    const firstChar = user?.name ? user?.name[0].toUpperCase() : user.username[0].toUpperCase()
     return (
       <div
         style={{

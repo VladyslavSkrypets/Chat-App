@@ -12,12 +12,14 @@ const ChatInfo = ({
   setChatMembers,
 }) => {
   const currentChatObj = items.find((i) => i.room_id === currentDialogId);
+  const membersId = currentChatObj.chatMembers.map((member) => member.user_id);
   const [editMode, setEditMode] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
   const [users, setUsers] = useState([]);
   const [name, setName] = useState(currentChatObj.room_id);
   const [value, setValue] = useState('');
 
+  console.log("currentChatObj = ", currentChatObj);
   useEffect(() => {
     socket.on('CHAT_EDIT', (res) => {
       changeDialogPhoto(res);
@@ -44,29 +46,34 @@ const ChatInfo = ({
     if (data.length) {
       const index = data.findIndex((u) => u.email == user.email);
       if (index !== -1) data.splice(index, 1);
+      
       setUsers(
         data.map((us) => {
           return { ...us, checked: false };
-        }),
+        }).filter((us) => !membersId.includes(us.user_id)),
       );
     }
   };
   const onAddMembers = () => {
-    const chatMembersDTO = users.map((user) => {
-      return { userEmail: user.user_id, room_name: currentDialogId }; // currentDialogId such as room name
+    const chatMembersDTO = users.filter((us) => us.checked === true).map((new_user) => {
+      console.log(new_user);
+      return { user_id: new_user.user_id, room_id: currentDialogId, creator_id: user.user_id }; // currentDialogId such as room name
     });
-    socket.emit('room-edit', chatMembersDTO);
+    console.log("CHAT MEMBER DTO", chatMembersDTO)
+    socket.emit('ROOM:ADD_USER', chatMembersDTO);
   };
   const onSelectUser = (selUser) => {
-    const index = users.findIndex((u) => u.email === selUser.email);
+    const index = users.findIndex((u) => u.user_id === selUser.user_id);
+    console.log("INDEX = ", index);
     const selUsers = [...users];
+    console.log("SEL USERS = ", selUsers);
     selUsers[index].checked = !selUsers[index].checked;
     setUsers(selUsers);
   };
-  const onMemberRemove = (email) => {
-    socket.emit('REMOVE_CHAT_MEMBER', {
-      userEmail: email,
-      room: currentDialogId,
+  const onMemberRemove = (user_id) => {
+    socket.emit('ROOM:REMOVE_USER', {
+      user_id: user_id,
+      room_id: currentDialogId,
     });
   };
   return (
@@ -93,7 +100,7 @@ export default connect(
   ({ dialogs, user }) => ({
     currentDialogId: dialogs.currentDialogId,
     items: dialogs.items,
-    user: user.data,
+    user: user.data
   }),
   dialogsActions,
 )(ChatInfo);

@@ -5,18 +5,20 @@ import { Modal } from 'antd';
 import { ChatInfo } from './index';
 import { useHistory } from 'react-router-dom';
 import { dialogsActions } from '../redux/actions';
+
+
 const Status = ({ currentDialogId, user, dialogs, setCurrentDialogId }) => {
   console.log("IN STATIS")
   const [showModal, setShowModal] = useState(false);
   const history = useHistory();
-  // if (!dialogs.length || !currentDialogId) {
-  //   return null;
-  // }
-  console.log(dialogs)
+
+  if (!dialogs.length || !currentDialogId) {
+    return null;
+  }
+
   const currentDialogObj = dialogs.find(
     (dialog) => dialog.room_id === currentDialogId,
   );
-  console.log(currentDialogId)
   const toggleShowModal = () => {
     setShowModal(!showModal);
   };
@@ -24,49 +26,30 @@ const Status = ({ currentDialogId, user, dialogs, setCurrentDialogId }) => {
     history.push('/');
     setCurrentDialogId('');
   }
-  if (true)
-    return (
-      <>
-        <Modal
-          title={'Chat Info'}
-          visible={showModal}
-          onCancel={toggleShowModal}
-          onOk={toggleShowModal}
-        >
-          <ChatInfo />
-        </Modal>
-        <BaseStatus
-          // online={false}
-          onClick={toggleShowModal}
-          fullname={currentDialogObj?.name}
-        />
-      </>
-    );
-  else
-    return (
-      <>
-        <Modal
-          title={'Chat Info'}
-          visible={showModal}
-          onCancel={toggleShowModal}
-          onOk={toggleShowModal}
-        >
-          <ChatInfo />
-        </Modal>
-        <BaseStatus
-          onClick={toggleShowModal}
-          fullname={currentDialogObj.chatMembers.find(
-            (u) => u.email != user.email,
-          )}
-        />
-      </>
-    );
+  return (
+    <>
+      <Modal
+        title={'Chat Info'}
+        visible={showModal}
+        onCancel={toggleShowModal}
+        onOk={toggleShowModal}
+      >
+        <ChatInfo />
+      </Modal>
+      <BaseStatus
+        // online={false}
+        onClick={toggleShowModal}
+        fullname={currentDialogObj?.name}
+      />
+    </>
+  );
+  
 };
 
 export default connect(
   ({ dialogs, user }) => ({
     dialogs: dialogs.items,
-    currentDialogId: dialogs.room_id,
+    currentDialogId: dialogs.currentDialogId,
     user: user.data,
   }),
   dialogsActions,

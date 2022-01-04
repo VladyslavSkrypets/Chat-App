@@ -16,9 +16,6 @@ const Messages = ({
   repliedMessage,
   onReplyMessage,
 }) => {
-  console.log("MESSAGES = ", items);
-  console.log("CURRENT DIALOG = ", currentDialog);
-  console.log("USER IN MESSAGES = ", user)
   return (
     <div
       ref={blockRef}
@@ -33,8 +30,6 @@ const Messages = ({
             const sender = currentDialog?.chatMembers.find(
               (cm) => item.user_id == cm.user_id,
             );
-
-            console.log('sender = ', sender);
 
             return (
               <>

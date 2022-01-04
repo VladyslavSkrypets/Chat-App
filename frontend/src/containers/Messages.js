@@ -22,7 +22,6 @@ const Dialogs = ({
   const messagesRef = useRef(null);
 
   const onNewMessage = (data) => {
-    console.log("ON NEW MESSAGE", data);
     addMessage(data);
   };
 

@@ -57,27 +57,30 @@ const Dialogs = ({
       setFiltredItems(filt);
     });
 
+    socket.on('CHATS:UPDATE', (data) => {
+      setDialogs(data.chats);
+      // history.replace('/');
+    })
+
     localStorage.setItem('accessToken', token ? token : localStorage.getItem('accessToken'));
-    console.log("SAVING USER")
     socket.emit('connected', token ? token : localStorage.getItem('accessToken'))
     socket.on('user:connected', (userData) => {
       console.log("GOT USER DATA", userData.user);
       store.dispatch(userActions.fetchUserData(userData.user));
       setDialogs(userData.chats)
     })
-    console.log(JSON.parse(localStorage.getItem('user')));
     history.replace('/');
 
     // socket.on('add_message', (res) => addMessageToDialog(res));
-    socket.on('add_message', (res) => console.log(res));
+    socket.on('add_message', (res) => console.log("res = ", res));
     socket.on('UPDATE_CHAT_PHOTO', (res) => changeDialogPhoto(res));
     return () => {
       socket.off('room-create');
-      socket.off('incoming-msg');
+      // socket.off('add_message');
       socket.off('user:chats');
     };
   }, []);
-  console.log("DIALOGS = ", filtred)
+
   return (
     <BaseDialogs
       userEmail={userEmail}
