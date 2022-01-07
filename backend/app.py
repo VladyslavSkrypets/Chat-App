@@ -113,6 +113,7 @@ def on_message(data):
         response.update({
             'room_id': room_id,
             'user_id': user_id,
+            'room_name': room_name,
             'repliedMessage': {
                 'room_id': room_id,
                 'user_id': user_id,
@@ -124,16 +125,18 @@ def on_message(data):
         response.update({
             'room_id': room_id,
             'user_id': user_id,
+            'room_name': room_name,
             **MessageSchema().dump(new_message)
         })
     emit('add_message', response, to=room_name)
+    emit('MESSAGE:ADD_LAST', response, to=room_name)
 
 
 @socketio.on('join')
 def on_join(data):
     """User joins a room"""
     print("JOINING USER TO ROOM", data)
-    room_id = data['dialog_id']
+    room_id = data.get('dialog_id', '')
     if room_id:
         room_name, = db.session.query(Room.name).filter(Room.room_id == data['dialog_id']).first()
         print(f'joined to = {room_name}')
@@ -186,34 +189,71 @@ def create_room(data):
 
 @socketio.on('ROOM:REMOVE_USER')
 def remove_user_from_chat(data):
-    user_id, room_id = data['user_id'], data['room_id']
-    members = set(chain(*db.session.query(room_member.c.user_id).filter_by(room_id=room_id).all()))
+    remove_user_id, room_id, creator_id = data['user_id'], data['room_id'], data['creator_id']
+    members_before = set(
+        chain(*db.session.query(room_member.c.user_id).filter_by(room_id=room_id).all())
+    )
     room_member_id, = (
         db.session.query(room_member.c.id)
         .filter_by(room_id=room_id)
-        .filter_by(user_id=user_id)
+        .filter_by(user_id=remove_user_id)
         .first()
     )
     Messages.query.filter(Messages.room_member_id == room_member_id).delete()
     db.session.query(room_member).filter_by(id=room_member_id).delete()
     db.session.commit()
-    for user_id, sid in get_users_sessions(members):
+    room_name = db.session.query(Room).filter_by(room_id=room_id).first().name
+    for user_id, sid in get_users_sessions(members_before):
         chats = get_chats(user_id)
-        emit('CHATS:UPDATE', {'chats': chats}, to=sid)
+        try:
+            if str(user_id) != remove_user_id:
+                emit('CHATS:UPDATE', {
+                    'chats': chats,
+                    'clear': False,
+                    'room_id': room_id,
+                    'removed_user_id': remove_user_id
+                }, to=sid)
+            else:
+                emit('CHATS:UPDATE', {
+                    'chats': chats,
+                    'clear': True,
+                    'room_id': room_id,
+                    'room_name': room_name,
+                    'removed_user_id': remove_user_id
+                }, to=sid)
+        except Exception as e:
+            print(e)
+
+    members_after = set(
+        chain(*db.session.query(room_member.c.user_id).filter_by(room_id=room_id).all())
+    )
+    if len(members_after) == 0:
+        remove_room(room_id)
 
     print("REMOVE USER DATA = ", data)
 
 
 @socketio.on('ROOM:ADD_USER')
 def add_user_to_chat(data_list):
-    print("ADD USER TO CHAT DATA = ", data_list)
     for data in data_list:
         user_id, room_id, creator_id = data['user_id'], data['room_id'], data['creator_id']
         add_room_member(room_id, creator_id, user_id)
+        room_name = db.session.query(Room).filter_by(room_id=room_id).first().name
         members = set(chain(*db.session.query(room_member.c.user_id).filter_by(room_id=room_id).all()))
         for user_id, sid in get_users_sessions(members):
             chats = get_chats(user_id)
-            emit('CHATS:UPDATE', {'chats': chats}, to=sid)
+            try:
+                if str(user_id) == creator_id:
+                    emit('CHATS:UPDATE', {'chats': chats, 'room_id': room_id}, to=sid)
+                else:
+                    emit('CHATS:UPDATE', {
+                        'chats': chats,
+                        'room_id': room_id,
+                        'room_name': room_name,
+                        'is_added': True
+                    }, to=sid)
+            except Exception as e:
+                print(e)
 
 
 @app.route('/get-user')

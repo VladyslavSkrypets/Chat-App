@@ -1,7 +1,7 @@
 from itertools import chain
 from schemas import RoomSchema, UserSchema, MessageSchema
 from models import *
-from typing import Iterable, List, Set
+from typing import List, Set
 
 
 def save_room(room_name: str, creator_id: int) -> int:
@@ -20,10 +20,6 @@ def add_room_member(room_id: int, creator_id: int, user_id: UUID) -> None:
         room.users.append(user)
 
     db.session.commit()
-
-
-def remove_room_members(room_id: int, creator_id: int, members: Iterable[str]):
-    pass
 
 
 def save_message(user_id: uuid.uuid4(), room_id: str, sent_at: datetime.datetime,

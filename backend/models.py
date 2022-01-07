@@ -62,7 +62,4 @@ class Messages(db.Model):
                                nullable=False)
     message_text = db.Column(db.TEXT, nullable=False)
     sent_at = db.Column(db.DateTime, nullable=False)
-    is_reply_to = db.Column(
-        UUID_FIELD, db.ForeignKey('messages.message_id'),
-        nullable=True
-    )
+    is_reply_to = db.Column(UUID_FIELD, nullable=True)
