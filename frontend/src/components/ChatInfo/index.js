@@ -25,17 +25,6 @@ const ChatInfo = ({
       <div style={{width: '100px', height: '100px', margin: 'auto', marginTop: '15px'}}>
         <Avatar user={{ photo, name: name, uuid: room_id }} />
       </div>
-      {/* {editMode ? (
-        <div className={'fileUpload'}>
-          <label htmlFor="file">Choose images to upload (PNG, JPG)</label>
-          <input
-            type="file"
-            id={'file'}
-            onChange={({ target }) => onAddFile(target.files)}
-          />
-          <Button onClick={changeChatPhoto}>Submit</Button>
-        </div>
-      ) : null} */}
       <div className={'chatName'}>{name}</div>
       {chatMembers.map((cm) => (
         <div key={cm.email} className={'chatMember'}>

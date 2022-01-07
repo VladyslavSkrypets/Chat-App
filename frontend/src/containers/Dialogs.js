@@ -59,10 +59,17 @@ const Dialogs = ({
       history.replace('/');
     })
 
-    socket.on('MESSAGE:ADD_LAST', (res) => addMessageToDialog(res));
-    return () => {
-      socket.off('MESSAGE:ADD_LAST');
-    };
+    socket.on('MESSAGE:ADD_LAST', (res) => {
+      const dialog_id = window.location.pathname.split('dialog/')[1];
+      addMessageToDialog(res)
+      if (dialog_id != res.room_id) {
+        openNotification({
+          type: 'success',
+          text: `У вас новое сообщенние в чате "${res.room_name}"`,
+          duration: 2
+        })
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -84,6 +91,16 @@ const Dialogs = ({
       }
     })
   }, [])
+
+  filtred.sort(function (a, b) {
+    if (a.name > b.name) {
+      return 1;
+    }
+    if (a.name < b.name) {
+      return -1;
+    }
+    return 0;
+  });
 
   return (
     <BaseDialogs

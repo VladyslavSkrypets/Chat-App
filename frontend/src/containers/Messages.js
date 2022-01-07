@@ -24,14 +24,6 @@ const Dialogs = ({
 
   const onNewMessage = (data) => {
     addMessage(data);
-    if (data.room_id !== currentDialogId) {
-      console.log("NEW MESSAGE = ", data);
-      openNotification({
-        type: 'success',
-        text: `У вас новое сообщенние в чате "${data.room_name}"`,
-        duration: 2
-      })
-    }
   };
 
   useEffect(() => {
