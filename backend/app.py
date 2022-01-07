@@ -108,6 +108,13 @@ def on_message(data):
     sent_ts = datetime.datetime.utcnow()
     new_message = save_message(user_id, room_id, sent_ts, msg, reply_to_id)
     room_name = Room.query.filter(Room.room_id == room_id).first().name
+    members = set(
+        chain(
+            *db.session.query(room_member.c.user_id)
+            .filter_by(room_id=room_id)
+            .all()
+        )
+    )
     if reply_to_id:
         replied_message = Messages.query.filter(Messages.message_id == reply_to_id).first()
         response.update({
@@ -129,7 +136,8 @@ def on_message(data):
             **MessageSchema().dump(new_message)
         })
     emit('add_message', response, to=room_name)
-    emit('MESSAGE:ADD_LAST', response, to=room_name)
+    for id_, sid in get_users_sessions(set(map(str, members))):
+        emit('MESSAGE:ADD_LAST', response, to=sid)
 
 
 @socketio.on('join')
