@@ -3,7 +3,6 @@ import { generateAvatarFromHash } from '../../utils/helpers';
 import './Avatar.scss';
 
 const Avatar = ({ user }) => {
-  console.log("AVATAR USER = ", user);
   if (!user.name && !user.username) {
     user.name = '#'
   }

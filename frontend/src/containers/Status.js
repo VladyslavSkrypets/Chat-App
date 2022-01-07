@@ -8,7 +8,6 @@ import { dialogsActions } from '../redux/actions';
 
 
 const Status = ({ currentDialogId, user, dialogs, setCurrentDialogId }) => {
-  console.log("IN STATIS")
   const [showModal, setShowModal] = useState(false);
   const history = useHistory();
 

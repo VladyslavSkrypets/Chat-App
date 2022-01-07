@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 
 import { dialogsActions, messagesActions } from '../redux/actions'
 import socket from '../core/socket';
-
+import { openNotification } from '../utils/helpers';
 import { Messages as BaseMessages } from '../components';
 import { Empty } from 'antd';
 
@@ -11,6 +11,7 @@ const Dialogs = ({
   currentDialogId,
   dialogs,
   fetchMessages,
+  setMessages,
   addMessage,
   items,
   user,
@@ -23,11 +24,18 @@ const Dialogs = ({
 
   const onNewMessage = (data) => {
     addMessage(data);
+    if (data.room_id !== currentDialogId) {
+      console.log("NEW MESSAGE = ", data);
+      openNotification({
+        type: 'success',
+        text: `У вас новое сообщенние в чате "${data.room_name}"`,
+        duration: 2
+      })
+    }
   };
 
   useEffect(() => {
     if (currentDialogId) {
-      console.log("messages dialog_id = ", currentDialogId)
       fetchMessages(currentDialogId);
     }
     socket.on('add_message', onNewMessage);
@@ -37,6 +45,14 @@ const Dialogs = ({
   useEffect(() => {
     messagesRef.current?.scrollTo(0, 999999);
   }, [items]);
+
+  useEffect(() => {
+    socket.on('CHATS:UPDATE', (data) =>{
+      if (data.removed_user_id) {
+        setMessages(items.filter((item) => item.user_id !== data.removed_user_id))
+      }
+    })
+  })
 
   if (!currentDialogId) return <Empty description="Откройте диалог" />;
 

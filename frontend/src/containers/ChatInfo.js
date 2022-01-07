@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { dialogsActions } from '../redux/actions';
 import { chatsApi, userApi } from '../utils/api';
 import socket from '../core/socket';
+import { openNotification } from '../utils/helpers';
 const ChatInfo = ({
   currentDialogId,
   items,
@@ -19,7 +20,6 @@ const ChatInfo = ({
   const [name, setName] = useState(currentChatObj.room_id);
   const [value, setValue] = useState('');
 
-  console.log("currentChatObj = ", currentChatObj);
   useEffect(() => {
     socket.on('CHAT_EDIT', (res) => {
       changeDialogPhoto(res);
@@ -56,17 +56,13 @@ const ChatInfo = ({
   };
   const onAddMembers = () => {
     const chatMembersDTO = users.filter((us) => us.checked === true).map((new_user) => {
-      console.log(new_user);
-      return { user_id: new_user.user_id, room_id: currentDialogId, creator_id: user.user_id }; // currentDialogId such as room name
+      return { user_id: new_user.user_id, room_id: currentDialogId, creator_id: user.user_id }; 
     });
-    console.log("CHAT MEMBER DTO", chatMembersDTO)
     socket.emit('ROOM:ADD_USER', chatMembersDTO);
   };
   const onSelectUser = (selUser) => {
     const index = users.findIndex((u) => u.user_id === selUser.user_id);
-    console.log("INDEX = ", index);
     const selUsers = [...users];
-    console.log("SEL USERS = ", selUsers);
     selUsers[index].checked = !selUsers[index].checked;
     setUsers(selUsers);
   };
@@ -74,6 +70,7 @@ const ChatInfo = ({
     socket.emit('ROOM:REMOVE_USER', {
       user_id: user_id,
       room_id: currentDialogId,
+      creator_id: currentChatObj.creator_id
     });
   };
   return (

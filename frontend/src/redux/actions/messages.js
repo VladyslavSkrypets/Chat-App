@@ -8,8 +8,6 @@ const actions = {
   addMessage: (message) => (dispatch, getState) => {
     const { dialogs } = getState();
     const { currentDialogId } = dialogs;
-    console.log("MESSAGE", message)
-    console.log("CUR DIALOG ID", currentDialogId)
     if (currentDialogId === message.room_id) {
       dispatch({
         type: 'MESSAGES:ADD_MESSAGE',
@@ -28,7 +26,6 @@ const actions = {
   fetchMessages: (room_id) => (dispatch, getState) => {
     dispatch(actions.setIsLoading(true));
     const { dialogs } = getState();
-    console.log("dialogs = ", dialogs)
     const { items } = dialogs;
     // const messages = items.find((c) => c.room === room).messages;
     // const messages = messagesApi.getMessages(room_id);

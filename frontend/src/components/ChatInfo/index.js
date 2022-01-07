@@ -9,7 +9,6 @@ const ChatInfo = ({
   value,
   isMe,
   chatMembers = [],
-  // onNameChange,
   onSelectUser,
   users = [],
   onAddMembers,
@@ -19,8 +18,6 @@ const ChatInfo = ({
   onChangeValue,
   onToggleEdit,
 }) => {
-
-  console.log("IS ME = ", isMe);
 
   return (
     <div className={'chatInfo'}>

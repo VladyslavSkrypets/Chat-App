@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { useHistory, useLocation } from 'react-router-dom';
-import { dialogsActions } from '../redux/actions';
+import { dialogsActions, messagesActions } from '../redux/actions'
 import socket from '../core/socket';
-import { chatsApi } from '../utils/api';
 import { userActions } from '../redux/actions';
 import store from '../redux/store';
+import { openNotification } from '../utils/helpers';
 
 import { Dialogs as BaseDialogs } from '../components';
 
 const Dialogs = ({
   addMessageToDialog,
+  fetchMessages,
   setDialogs,
   currentDialogId,
   setCurrentDialogId,
   addDialog,
   items,
   userEmail,
-  removeDialog,
   changeDialogPhoto,
 }) => {
   const [inputValue, setValue] = useState('');
@@ -44,42 +44,46 @@ const Dialogs = ({
 
   useEffect(() => {
     socket.on('add_chat', (res) => {
-      console.log("CREATED CHAT DATA = ", res);
       addDialog(res);
+      openNotification({
+        text: `Вы были добавлены в чат "${res.name}"`,
+        duration: 3
+      })
     });
-    socket.on('remove_chat', (res) => {
-      removeDialog(res);
-      history.push('/');
-      setCurrentDialogId('');
-      const filt = items;
-      const index = filt.findIndex((c) => c.room === res.room);
-      filt.splice(index, 1);
-      setFiltredItems(filt);
-    });
-
-    socket.on('CHATS:UPDATE', (data) => {
-      setDialogs(data.chats);
-      // history.replace('/');
-    })
 
     localStorage.setItem('accessToken', token ? token : localStorage.getItem('accessToken'));
     socket.emit('connected', token ? token : localStorage.getItem('accessToken'))
     socket.on('user:connected', (userData) => {
-      console.log("GOT USER DATA", userData.user);
       store.dispatch(userActions.fetchUserData(userData.user));
       setDialogs(userData.chats)
+      history.replace('/');
     })
-    history.replace('/');
 
-    // socket.on('add_message', (res) => addMessageToDialog(res));
-    socket.on('add_message', (res) => console.log("res = ", res));
-    socket.on('UPDATE_CHAT_PHOTO', (res) => changeDialogPhoto(res));
+    socket.on('MESSAGE:ADD_LAST', (res) => addMessageToDialog(res));
     return () => {
-      socket.off('room-create');
-      // socket.off('add_message');
-      socket.off('user:chats');
+      socket.off('MESSAGE:ADD_LAST');
     };
   }, []);
+
+  useEffect(() => {
+    socket.on('CHATS:UPDATE', (data) => {
+      console.log("NEW CHATS =", data.chats)
+      setDialogs(data.chats);
+      setFiltredItems(data.chats);
+      if (data.clear) {
+        openNotification({
+          title: `Вы были удалены из чата "${data.room_name}"`,
+          duration: 3
+        })
+      }
+      if (data.is_added) {
+        openNotification({
+          title: `Вы были добавлены в чат "${data.room_name}"`,
+          duration: 3
+        })
+      }
+    })
+  }, [])
 
   return (
     <BaseDialogs
@@ -97,6 +101,7 @@ export default connect(
   ({ dialogs }) => ({
     dialogs: dialogs,
     items: dialogs.items,
+    currentDialogId: dialogs.currentDialogId
   }),
-  dialogsActions,
+  { ...messagesActions,...dialogsActions }
 )(Dialogs);
